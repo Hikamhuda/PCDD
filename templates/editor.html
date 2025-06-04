@@ -50,7 +50,7 @@
 
       .image-container {
         max-width: 700px;
-        margin: 1.5rem auto; /* Sedikit lebih banyak margin atas/bawah */
+       /* margin: 1.5rem auto;  Sedikit lebih banyak margin atas/bawah */
         border-radius: 15px; /* Sedikit lebih besar radius */
         box-shadow: 0 15px 35px rgba(44, 24, 16, 0.2),
           inset 0 0 0 1px rgba(212, 175, 55, 0.5); /* Shadow lebih dalam */
@@ -98,7 +98,7 @@
         border-radius: 15px;
         box-shadow: 0 10px 25px rgba(44, 24, 16, 0.15),
           inset 0 1px 0 rgba(255, 255, 255, 0.3);
-        margin-top: 2.5rem; /* Margin lebih */
+       /* margin-top: 2.5rem;  Margin lebih */
         border: 2px solid var(--vintage-gold);
         position: relative;
         z-index: 2; /* Pastikan di atas overlay body */
@@ -318,642 +318,649 @@
   </head>
   <body>
     <div class="container py-4">
-      <div class="text-center mb-4">
-        <h2>Editor Gambar Lanjutan</h2>
-        <p class="lead">Sempurnakan gambar Anda dengan kontrol presisi.</p>
-      </div>
-
-      <div class="image-container vintage-aging">
-        <img
-          id="imagePreview"
-          src="{{ url_for('static', filename='uploads/' + filename) if filename else '#' }}"
-          alt="Gambar untuk diedit"
-        />
-        <div class="loading-overlay" id="loadingOverlay">
-          <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Memuat...</span>
-          </div>
+        <div class="text-center mb-4">
+            <h2>Editor Gambar Lanjutan</h2>
+            <p class="lead">Sempurnakan gambar Anda dengan kontrol presisi.</p>
+            <hr>
         </div>
-      </div>
-
-      <div class="controls-container vintage-aging">
-        <div class="preset-buttons mb-4">
-          <button type="button" class="btn preset-btn" data-preset="default">
-            <i class="bi bi-arrow-counterclockwise"></i> Default
-          </button>
-          <button type="button" class="btn preset-btn" data-preset="vivid">
-            <i class="bi bi-brightness-high"></i> Jelas
-          </button>
-          <button type="button" class="btn preset-btn" data-preset="soft">
-            <i class="bi bi-cloud-drizzle"></i> Lembut
-          </button>
-          <button type="button" class="btn preset-btn" data-preset="sharp">
-            <i class="bi bi-gem"></i> Tajam
-          </button>
-          <button type="button" class="btn preset-btn" data-preset="warm">
-            <i class="bi bi-sun"></i> Hangat
-          </button>
-          <button type="button" class="btn preset-btn" data-preset="cool">
-            <i class="bi bi-snow2"></i> Dingin
-          </button>
+        <div class="row">
+            <div class="col-lg-4 col-md-12 col-sm-12">
+                <div class="image-container vintage-aging">
+                  <img
+                    id="imagePreview"
+                    src="{{ url_for('static', filename='uploads/' + filename) if filename else '#' }}"
+                    alt="Gambar untuk diedit"
+                  />
+                  <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Memuat...</span>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            <div class="col-lg-8 col-md-12 col-sm-12 mt-lg-0 mt-md-4 mt-sm-4">
+                <div class="controls-container vintage-aging">
+                  <div class="preset-buttons mb-4">
+                    <button type="button" class="btn preset-btn" data-preset="default">
+                      <i class="bi bi-arrow-counterclockwise"></i> Default
+                    </button>
+                    <button type="button" class="btn preset-btn" data-preset="vivid">
+                      <i class="bi bi-brightness-high"></i> Jelas
+                    </button>
+                    <button type="button" class="btn preset-btn" data-preset="soft">
+                      <i class="bi bi-cloud-drizzle"></i> Lembut
+                    </button>
+                    <button type="button" class="btn preset-btn" data-preset="sharp">
+                      <i class="bi bi-gem"></i> Tajam
+                    </button>
+                    <button type="button" class="btn preset-btn" data-preset="warm">
+                      <i class="bi bi-sun"></i> Hangat
+                    </button>
+                    <button type="button" class="btn preset-btn" data-preset="cool">
+                      <i class="bi bi-snow2"></i> Dingin
+                    </button>
+                  </div>
+          
+                  <form id="adjustmentForm">
+                    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                      <li class="nav-item" role="presentation">
+                        <button
+                          class="nav-link active"
+                          id="pills-general-tab"
+                          data-bs-toggle="pill"
+                          data-bs-target="#pills-general"
+                          type="button"
+                          role="tab"
+                          aria-controls="pills-general"
+                          aria-selected="true"
+                        >
+                          Umum
+                        </button>
+                      </li>
+                      <li class="nav-item" role="presentation">
+                        <button
+                          class="nav-link"
+                          id="pills-mixer-tab"
+                          data-bs-toggle="pill"
+                          data-bs-target="#pills-mixer"
+                          type="button"
+                          role="tab"
+                          aria-controls="pills-mixer"
+                          aria-selected="false"
+                        >
+                          Color Mixer
+                        </button>
+                      </li>
+                    </ul>
+          
+                    <div class="tab-content" id="pills-tabContent">
+                      <div
+                        class="tab-pane fade show active"
+                        id="pills-general"
+                        role="tabpanel"
+                        aria-labelledby="pills-general-tab"
+                      >
+                        <div class="color-section">
+                          <h5>Penyesuaian Dasar</h5>
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="brightness" class="form-label">Kecerahan</label
+                              ><span id="brightnessValue">1.00</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="0.5"
+                              max="1.5"
+                              step="0.01"
+                              id="brightness"
+                              name="brightness"
+                              value="1.0"
+                            />
+                          </div>
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="contrast" class="form-label">Kontras</label
+                              ><span id="contrastValue">1.00</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="0.5"
+                              max="1.5"
+                              step="0.01"
+                              id="contrast"
+                              name="contrast"
+                              value="1.0"
+                            />
+                          </div>
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="saturation" class="form-label"
+                                >Saturasi Global</label
+                              ><span id="saturationValue">1.00</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="0"
+                              max="2"
+                              step="0.01"
+                              id="saturation"
+                              name="saturation"
+                              value="1.0"
+                            />
+                          </div>
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="sharpness" class="form-label">Ketajaman</label
+                              ><span id="sharpnessValue">1.00</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="0"
+                              max="3"
+                              step="0.05"
+                              id="sharpness"
+                              name="sharpness"
+                              value="1.0"
+                            />
+                          </div>
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="noise_reduction" class="form-label"
+                                >Reduksi Noise</label
+                              ><span id="noise_reductionValue">0.0</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="0"
+                              max="5"
+                              step="0.5"
+                              id="noise_reduction"
+                              name="noise_reduction"
+                              value="0"
+                            />
+                          </div>
+                          <!-- White Balance Slider Start -->
+                          <div class="slider-container">
+                            <div class="slider-label">
+                              <label for="white_balance_temp" class="form-label"
+                                >White Balance</label
+                              ><span id="white_balance_tempValue">0</span>
+                            </div>
+                            <input
+                              type="range"
+                              class="form-range adjustment-slider"
+                              min="-100"
+                              max="100"
+                              step="1"
+                              id="white_balance_temp"
+                              name="white_balance_temp"
+                              value="0"
+                            />
+                            <div class="d-flex justify-content-between mt-1">
+                              <small class="text-muted"
+                                >Cool <i class="bi bi-thermometer-snow"></i
+                              ></small>
+                              <small class="text-muted"
+                                ><i class="bi bi-thermometer-sun"></i> Warm</small
+                              >
+                            </div>
+                          </div>
+                          <!-- White Balance Slider End -->
+                        </div>
+                      </div>
+          
+                      <div
+                        class="tab-pane fade"
+                        id="pills-mixer"
+                        role="tabpanel"
+                        aria-labelledby="pills-mixer-tab"
+                      >
+                        <p class="text-muted small mb-3">
+                          Sesuaikan Hue, Saturasi, dan Kecerahan untuk rentang warna
+                          tertentu.
+                        </p>
+                        <div class="row">
+                          <div class="col-md-6">
+                            <div class="color-section">
+                              <h5 style="color: #d32f2f">Merah</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_r" class="form-label">Hue Shift</label
+                                  ><span id="hue_rValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_r"
+                                  name="hue_r"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_r" class="form-label">Saturasi</label
+                                  ><span id="sat_rValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_r"
+                                  name="sat_r"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_r" class="form-label">Kecerahan</label
+                                  ><span id="light_rValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_r"
+                                  name="light_r"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #f57c00">Oranye</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_o" class="form-label">Hue Shift</label
+                                  ><span id="hue_oValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_o"
+                                  name="hue_o"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_o" class="form-label">Saturasi</label
+                                  ><span id="sat_oValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_o"
+                                  name="sat_o"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_o" class="form-label">Kecerahan</label
+                                  ><span id="light_oValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_o"
+                                  name="light_o"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #fbc02d">Kuning</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_y" class="form-label">Hue Shift</label
+                                  ><span id="hue_yValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_y"
+                                  name="hue_y"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_y" class="form-label">Saturasi</label
+                                  ><span id="sat_yValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_y"
+                                  name="sat_y"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_y" class="form-label">Kecerahan</label
+                                  ><span id="light_yValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_y"
+                                  name="light_y"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #388e3c">Hijau</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_g" class="form-label">Hue Shift</label
+                                  ><span id="hue_gValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_g"
+                                  name="hue_g"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_g" class="form-label">Saturasi</label
+                                  ><span id="sat_gValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_g"
+                                  name="sat_g"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_g" class="form-label">Kecerahan</label
+                                  ><span id="light_gValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_g"
+                                  name="light_g"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                            <div class="color-section">
+                              <h5 style="color: #0097a7">Aqua</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_a" class="form-label">Hue Shift</label
+                                  ><span id="hue_aValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_a"
+                                  name="hue_a"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_a" class="form-label">Saturasi</label
+                                  ><span id="sat_aValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_a"
+                                  name="sat_a"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_a" class="form-label">Kecerahan</label
+                                  ><span id="light_aValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_a"
+                                  name="light_a"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #1976d2">Biru</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_b" class="form-label">Hue Shift</label
+                                  ><span id="hue_bValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_b"
+                                  name="hue_b"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_b" class="form-label">Saturasi</label
+                                  ><span id="sat_bValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_b"
+                                  name="sat_b"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_b" class="form-label">Kecerahan</label
+                                  ><span id="light_bValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_b"
+                                  name="light_b"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #7b1fa2">Ungu</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_p" class="form-label">Hue Shift</label
+                                  ><span id="hue_pValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_p"
+                                  name="hue_p"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_p" class="form-label">Saturasi</label
+                                  ><span id="sat_pValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_p"
+                                  name="sat_p"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_p" class="form-label">Kecerahan</label
+                                  ><span id="light_pValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_p"
+                                  name="light_p"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                            <div class="color-section">
+                              <h5 style="color: #c2185b">Magenta</h5>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="hue_m" class="form-label">Hue Shift</label
+                                  ><span id="hue_mValue">0</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="-180"
+                                  max="180"
+                                  step="1"
+                                  id="hue_m"
+                                  name="hue_m"
+                                  value="0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="sat_m" class="form-label">Saturasi</label
+                                  ><span id="sat_mValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="sat_m"
+                                  name="sat_m"
+                                  value="1.0"
+                                />
+                              </div>
+                              <div class="slider-container">
+                                <div class="slider-label">
+                                  <label for="light_m" class="form-label">Kecerahan</label
+                                  ><span id="light_mValue">1.00</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  class="form-range adjustment-slider"
+                                  min="0"
+                                  max="2"
+                                  step="0.01"
+                                  id="light_m"
+                                  name="light_m"
+                                  value="1.0"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="text-center mt-4 pt-3 border-top">
+                      <button
+                        type="button"
+                        id="saveBtn"
+                        class="btn btn-vintage btn-vintage-primary btn-lg px-5"
+                      >
+                        <i class="bi bi-check-lg"></i> Terapkan & Simpan
+                      </button>
+                      <a
+                        href="{{ url_for('index') }}"
+                        class="btn btn-vintage btn-vintage-secondary btn-lg ms-2"
+                      >
+                        <i class="bi bi-x-lg"></i> Batal
+                      </a>
+                    </div>
+                  </form>
+                </div>
+            </div>
         </div>
 
-        <form id="adjustmentForm">
-          <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link active"
-                id="pills-general-tab"
-                data-bs-toggle="pill"
-                data-bs-target="#pills-general"
-                type="button"
-                role="tab"
-                aria-controls="pills-general"
-                aria-selected="true"
-              >
-                Umum
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link"
-                id="pills-mixer-tab"
-                data-bs-toggle="pill"
-                data-bs-target="#pills-mixer"
-                type="button"
-                role="tab"
-                aria-controls="pills-mixer"
-                aria-selected="false"
-              >
-                Color Mixer
-              </button>
-            </li>
-          </ul>
 
-          <div class="tab-content" id="pills-tabContent">
-            <div
-              class="tab-pane fade show active"
-              id="pills-general"
-              role="tabpanel"
-              aria-labelledby="pills-general-tab"
-            >
-              <div class="color-section">
-                <h5>Penyesuaian Dasar</h5>
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="brightness" class="form-label">Kecerahan</label
-                    ><span id="brightnessValue">1.00</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="0.5"
-                    max="1.5"
-                    step="0.01"
-                    id="brightness"
-                    name="brightness"
-                    value="1.0"
-                  />
-                </div>
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="contrast" class="form-label">Kontras</label
-                    ><span id="contrastValue">1.00</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="0.5"
-                    max="1.5"
-                    step="0.01"
-                    id="contrast"
-                    name="contrast"
-                    value="1.0"
-                  />
-                </div>
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="saturation" class="form-label"
-                      >Saturasi Global</label
-                    ><span id="saturationValue">1.00</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="0"
-                    max="2"
-                    step="0.01"
-                    id="saturation"
-                    name="saturation"
-                    value="1.0"
-                  />
-                </div>
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="sharpness" class="form-label">Ketajaman</label
-                    ><span id="sharpnessValue">1.00</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="0"
-                    max="3"
-                    step="0.05"
-                    id="sharpness"
-                    name="sharpness"
-                    value="1.0"
-                  />
-                </div>
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="noise_reduction" class="form-label"
-                      >Reduksi Noise</label
-                    ><span id="noise_reductionValue">0.0</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="0"
-                    max="5"
-                    step="0.5"
-                    id="noise_reduction"
-                    name="noise_reduction"
-                    value="0"
-                  />
-                </div>
-                <!-- White Balance Slider Start -->
-                <div class="slider-container">
-                  <div class="slider-label">
-                    <label for="white_balance_temp" class="form-label"
-                      >White Balance</label
-                    ><span id="white_balance_tempValue">0</span>
-                  </div>
-                  <input
-                    type="range"
-                    class="form-range adjustment-slider"
-                    min="-100"
-                    max="100"
-                    step="1"
-                    id="white_balance_temp"
-                    name="white_balance_temp"
-                    value="0"
-                  />
-                  <div class="d-flex justify-content-between mt-1">
-                    <small class="text-muted"
-                      >Cool <i class="bi bi-thermometer-snow"></i
-                    ></small>
-                    <small class="text-muted"
-                      ><i class="bi bi-thermometer-sun"></i> Warm</small
-                    >
-                  </div>
-                </div>
-                <!-- White Balance Slider End -->
-              </div>
-            </div>
-
-            <div
-              class="tab-pane fade"
-              id="pills-mixer"
-              role="tabpanel"
-              aria-labelledby="pills-mixer-tab"
-            >
-              <p class="text-muted small mb-3">
-                Sesuaikan Hue, Saturasi, dan Kecerahan untuk rentang warna
-                tertentu.
-              </p>
-              <div class="row">
-                <div class="col-md-6">
-                  <div class="color-section">
-                    <h5 style="color: #d32f2f">Merah</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_r" class="form-label">Hue Shift</label
-                        ><span id="hue_rValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_r"
-                        name="hue_r"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_r" class="form-label">Saturasi</label
-                        ><span id="sat_rValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_r"
-                        name="sat_r"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_r" class="form-label">Kecerahan</label
-                        ><span id="light_rValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_r"
-                        name="light_r"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #f57c00">Oranye</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_o" class="form-label">Hue Shift</label
-                        ><span id="hue_oValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_o"
-                        name="hue_o"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_o" class="form-label">Saturasi</label
-                        ><span id="sat_oValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_o"
-                        name="sat_o"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_o" class="form-label">Kecerahan</label
-                        ><span id="light_oValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_o"
-                        name="light_o"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #fbc02d">Kuning</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_y" class="form-label">Hue Shift</label
-                        ><span id="hue_yValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_y"
-                        name="hue_y"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_y" class="form-label">Saturasi</label
-                        ><span id="sat_yValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_y"
-                        name="sat_y"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_y" class="form-label">Kecerahan</label
-                        ><span id="light_yValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_y"
-                        name="light_y"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #388e3c">Hijau</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_g" class="form-label">Hue Shift</label
-                        ><span id="hue_gValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_g"
-                        name="hue_g"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_g" class="form-label">Saturasi</label
-                        ><span id="sat_gValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_g"
-                        name="sat_g"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_g" class="form-label">Kecerahan</label
-                        ><span id="light_gValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_g"
-                        name="light_g"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <div class="color-section">
-                    <h5 style="color: #0097a7">Aqua</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_a" class="form-label">Hue Shift</label
-                        ><span id="hue_aValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_a"
-                        name="hue_a"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_a" class="form-label">Saturasi</label
-                        ><span id="sat_aValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_a"
-                        name="sat_a"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_a" class="form-label">Kecerahan</label
-                        ><span id="light_aValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_a"
-                        name="light_a"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #1976d2">Biru</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_b" class="form-label">Hue Shift</label
-                        ><span id="hue_bValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_b"
-                        name="hue_b"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_b" class="form-label">Saturasi</label
-                        ><span id="sat_bValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_b"
-                        name="sat_b"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_b" class="form-label">Kecerahan</label
-                        ><span id="light_bValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_b"
-                        name="light_b"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #7b1fa2">Ungu</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_p" class="form-label">Hue Shift</label
-                        ><span id="hue_pValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_p"
-                        name="hue_p"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_p" class="form-label">Saturasi</label
-                        ><span id="sat_pValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_p"
-                        name="sat_p"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_p" class="form-label">Kecerahan</label
-                        ><span id="light_pValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_p"
-                        name="light_p"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                  <div class="color-section">
-                    <h5 style="color: #c2185b">Magenta</h5>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="hue_m" class="form-label">Hue Shift</label
-                        ><span id="hue_mValue">0</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="-180"
-                        max="180"
-                        step="1"
-                        id="hue_m"
-                        name="hue_m"
-                        value="0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="sat_m" class="form-label">Saturasi</label
-                        ><span id="sat_mValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="sat_m"
-                        name="sat_m"
-                        value="1.0"
-                      />
-                    </div>
-                    <div class="slider-container">
-                      <div class="slider-label">
-                        <label for="light_m" class="form-label">Kecerahan</label
-                        ><span id="light_mValue">1.00</span>
-                      </div>
-                      <input
-                        type="range"
-                        class="form-range adjustment-slider"
-                        min="0"
-                        max="2"
-                        step="0.01"
-                        id="light_m"
-                        name="light_m"
-                        value="1.0"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="text-center mt-4 pt-3 border-top">
-            <button
-              type="button"
-              id="saveBtn"
-              class="btn btn-vintage btn-vintage-primary btn-lg px-5"
-            >
-              <i class="bi bi-check-lg"></i> Terapkan & Simpan
-            </button>
-            <a
-              href="{{ url_for('index') }}"
-              class="btn btn-vintage btn-vintage-secondary btn-lg ms-2"
-            >
-              <i class="bi bi-x-lg"></i> Batal
-            </a>
-          </div>
-        </form>
-      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
