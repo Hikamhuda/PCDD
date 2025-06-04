@@ -1,0 +1,13 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+.camera-container {
+    margin-bottom: 20px;
+}
+
+#countdown {
+    font-size: 2em;
+    margin-top: 10px;
+}

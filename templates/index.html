@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Photobooth</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <h1>Photobooth</h1>
+
+    <div class="camera-container">
+        <video id="cameraFeed" width="640" height="480" autoplay></video>
+        <button id="captureBtn">Ambil Foto</button>
+        <div id="countdown"></div>
+    </div>
+
+    <h2>Unggah Foto</h2>
+    <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Unggah">
+    </form>
+
+    <canvas id="canvas" style="display:none;"></canvas>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
