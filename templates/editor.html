@@ -6,24 +6,285 @@
     <title>Editor Gambar Lanjutan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global_vintage.css') }}">
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 3rem; }
-        .image-container { position: relative; max-width: 700px; margin: 1rem auto; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        #imagePreview { width: 100%; display: block; background-color: #fff; min-height: 200px; /* Mencegah collapse jika gambar belum ada */}
-        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 10; display: none; }
-        .controls-container { background-color: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); margin-top: 1.5rem; }
-        .slider-container { margin-bottom: 1.2rem; }
-        .slider-label { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem; color: #555; }
-        .slider-label span { background-color: #e9ecef; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 500; min-width: 35px; text-align: center; font-size: 0.85rem;}
-        .form-range { padding: 0; } 
-        .preset-buttons { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .preset-btn { flex: 1; min-width: 110px; font-size: 0.9rem; }
-        .color-section { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; background-color: #fdfdfd; }
-        .color-section h5 { margin-bottom: 1rem; color: #333; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;}
-        .nav-pills .nav-link { color: #555; font-weight: 500; }
-        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
-        .form-range::-webkit-slider-thumb { background-color: #0d6efd; } /* Chrome, Edge, Safari */
-        .form-range::-moz-range-thumb { background-color: #0d6efd; } /* Firefox */
+        /* Override/Adjustments for editor.html specifically */
+        body {
+            /* Warna body diatur oleh global_vintage.css */
+            font-family: 'Crimson Text', serif; /* Memastikan font sesuai tema */
+        }
+
+        .container {
+            /* Pastikan konten utama berada di atas overlay tekstur kertas */
+            z-index: 2;
+        }
+
+        .text-center h2 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900; /* Lebih tebal seperti hero section index.html */
+            font-size: 2.8rem; /* Sedikit lebih kecil dari hero, tapi tetap besar */
+            color: var(--vintage-dark);
+            text-shadow: 2px 2px 0px rgba(44, 24, 16, 0.2), 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+
+        .text-center p.lead {
+            font-size: 1.3rem; /* Sedikit lebih kecil dari hero section */
+            font-style: italic;
+            color: var(--vintage-brown); /* Warna coklat vintage */
+            text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.1);
+        }
+
+        .image-container {
+            max-width: 700px;
+            margin: 1.5rem auto; /* Sedikit lebih banyak margin atas/bawah */
+            border-radius: 15px; /* Sedikit lebih besar radius */
+            box-shadow: 0 15px 35px rgba(44, 24, 16, 0.2), inset 0 0 0 1px rgba(212, 175, 55, 0.5); /* Shadow lebih dalam */
+            border: 3px solid var(--vintage-gold); /* Border tebal emas */
+            background-color: var(--parchment); /* Warna dasar kontainer gambar */
+            position: relative;
+            z-index: 2; /* Pastikan di atas overlay body */
+        }
+
+        .image-container::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 2px solid rgba(212, 175, 55, 0.3); /* Border dalam */
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        #imagePreview {
+            width: 100%;
+            display: block;
+            min-height: 200px;
+            border-radius: 10px; /* Radius agar cocok dengan inner border */
+        }
+
+        .loading-overlay {
+            background: rgba(255, 255, 255, 0.85); /* Sedikit lebih buram */
+            border-radius: 15px; /* Sesuai container */
+            z-index: 10;
+        }
+        .loading-overlay .spinner-border {
+            color: var(--vintage-brown) !important; /* Warna spinner */
+        }
+
+        .controls-container {
+            background: linear-gradient(135deg, var(--parchment), var(--vintage-cream)); /* Background vintage */
+            padding: 2rem; /* Padding lebih */
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(44, 24, 16, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            margin-top: 2.5rem; /* Margin lebih */
+            border: 2px solid var(--vintage-gold);
+            position: relative;
+            z-index: 2; /* Pastikan di atas overlay body */
+        }
+
+        .controls-container::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
+            pointer-events: none;
+        }
+
+        .slider-container {
+            margin-bottom: 1.5rem; /* Jarak lebih */
+        }
+
+        .slider-label {
+            color: var(--vintage-dark);
+            font-weight: 500;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .slider-label span {
+            background-color: var(--vintage-cream); /* Warna vintage */
+            color: var(--vintage-brown);
+            border: 1px solid var(--vintage-gold); /* Border tipis */
+            padding: 0.2rem 0.5rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .form-range {
+            height: 0.75rem; /* Tinggi slider */
+            background-color: rgba(139, 69, 19, 0.1); /* Track vintage */
+            border-radius: 5px;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background-color: var(--vintage-brown); /* Thumb vintage */
+            border: 2px solid var(--vintage-gold);
+            box-shadow: 0 2px 4px rgba(44, 24, 16, 0.2);
+            width: 1.5rem; /* Ukuran thumb */
+            height: 1.5rem;
+            margin-top: -0.4rem; /* Sesuaikan agar tengah */
+        }
+
+        .form-range::-moz-range-thumb {
+            background-color: var(--vintage-brown);
+            border: 2px solid var(--vintage-gold);
+            box-shadow: 0 2px 4px rgba(44, 24, 16, 0.2);
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        .preset-buttons {
+            gap: 0.8rem; /* Jarak antar tombol */
+            margin-bottom: 2rem;
+        }
+
+        .preset-btn {
+            border: 2px solid var(--vintage-brown); /* Border vintage */
+            background-color: var(--parchment); /* Background vintage */
+            color: var(--vintage-brown);
+            font-family: 'Crimson Text', serif; /* Font script */
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(44, 24, 16, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background-color: var(--vintage-brown);
+            color: var(--vintage-cream);
+            border-color: var(--vintage-gold);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(44, 24, 16, 0.2);
+        }
+
+        .preset-btn i {
+            margin-right: 0.3rem;
+            color: var(--vintage-gold);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .preset-btn:hover i {
+            color: var(--parchment);
+        }
+
+        .color-section {
+            border: 1px solid rgba(139, 69, 19, 0.2); /* Border lebih halus */
+            border-radius: 10px; /* Radius lebih besar */
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--vintage-cream) 0%, var(--parchment) 100%); /* Lighter vintage background */
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.05); /* Inset shadow */
+            position: relative;
+            z-index: 1;
+        }
+
+        .color-section h5 {
+            color: var(--vintage-dark);
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            border-bottom: 1px dashed rgba(139, 69, 19, 0.3); /* Garis putus-putus */
+            padding-bottom: 0.6rem;
+            margin-bottom: 1.2rem;
+            text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Color Mixer specific styling for H5 */
+        .color-section h5[style] {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .nav-pills {
+            border: 1px solid var(--vintage-gold); /* Border vintage */
+            border-radius: 10px;
+            background-color: var(--parchment);
+            padding: 0.5rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            justify-content: center; /* Pusatkan tab */
+        }
+
+        .nav-pills .nav-item {
+            margin: 0 0.3rem;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--vintage-brown);
+            font-weight: 600;
+            font-family: 'Crimson Text', serif;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1; /* Pastikan teks di atas background pseudo-element */
+        }
+
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, var(--vintage-brown), var(--vintage-red)); /* Active tab vintage */
+            color: var(--vintage-cream);
+            box-shadow: 0 2px 5px rgba(44, 24, 16, 0.2), inset 0 0 0 1px rgba(212, 175, 55, 0.4);
+            border-color: var(--vintage-gold);
+            transform: translateY(-1px);
+        }
+
+        .nav-pills .nav-link:not(.active):hover {
+            background-color: var(--vintage-cream);
+            color: var(--vintage-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Buttons at the bottom */
+        .text-center.mt-4.pt-3.border-top {
+            border-top: 1px dashed rgba(139, 69, 19, 0.3) !important; /* Border atas putus-putus */
+            padding-top: 2rem !important;
+            margin-top: 2rem !important;
+        }
+
+        .btn-lg {
+            padding: 1.1rem 3rem;
+            font-size: 1.2rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .text-center h2 {
+                font-size: 2.2rem;
+            }
+            p.lead {
+                font-size: 1.1rem;
+            }
+            .controls-container {
+                padding: 1rem;
+            }
+            .preset-btn {
+                min-width: unset;
+                flex: 1 1 auto; /* Allow buttons to wrap more naturally */
+                font-size: 0.85rem;
+                padding: 0.5rem 0.75rem;
+            }
+            .slider-label, .color-section h5 {
+                font-size: 0.9rem;
+            }
+            .nav-pills .nav-link {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .btn-lg {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -33,21 +294,21 @@
             <p class="lead">Sempurnakan gambar Anda dengan kontrol presisi.</p>
         </div>
 
-        <div class="image-container">
+        <div class="image-container vintage-aging">
             <img id="imagePreview" src="{{ url_for('static', filename='uploads/' + filename) if filename else '#' }}" alt="Gambar untuk diedit">
             <div class="loading-overlay" id="loadingOverlay">
                 <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Memuat...</span></div>
             </div>
         </div>
 
-        <div class="controls-container">
+        <div class="controls-container vintage-aging">
             <div class="preset-buttons mb-4">
-                <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="default"><i class="bi bi-arrow-counterclockwise"></i> Default</button>
-                <button type="button" class="btn btn-outline-primary preset-btn" data-preset="vivid"><i class="bi bi-brightness-high"></i> Jelas</button>
-                <button type="button" class="btn btn-outline-info preset-btn" data-preset="soft"><i class="bi bi-cloud-drizzle"></i> Lembut</button>
-                <button type="button" class="btn btn-outline-dark preset-btn" data-preset="sharp"><i class="bi bi-gem"></i> Tajam</button>
-                <button type="button" class="btn btn-outline-warning preset-btn" data-preset="warm"><i class="bi bi-sun"></i> Hangat</button>
-                <button type="button" class="btn btn-outline-success preset-btn" data-preset="cool"><i class="bi bi-snow2"></i> Dingin</button>
+                <button type="button" class="btn preset-btn" data-preset="default"><i class="bi bi-arrow-counterclockwise"></i> Default</button>
+                <button type="button" class="btn preset-btn" data-preset="vivid"><i class="bi bi-brightness-high"></i> Jelas</button>
+                <button type="button" class="btn preset-btn" data-preset="soft"><i class="bi bi-cloud-drizzle"></i> Lembut</button>
+                <button type="button" class="btn preset-btn" data-preset="sharp"><i class="bi bi-gem"></i> Tajam</button>
+                <button type="button" class="btn preset-btn" data-preset="warm"><i class="bi bi-sun"></i> Hangat</button>
+                <button type="button" class="btn preset-btn" data-preset="cool"><i class="bi bi-snow2"></i> Dingin</button>
             </div>
 
             <form id="adjustmentForm">
@@ -142,11 +403,14 @@
                                     <div class="slider-container"><div class="slider-label"><label for="light_m" class="form-label">Kecerahan</label><span id="light_mValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_m" name="light_m" value="1.0"></div>
                                 </div>
                             </div>
-                        </div> </div> </div> <div class="text-center mt-4 pt-3 border-top">
-                    <button type="button" id="saveBtn" class="btn btn-primary btn-lg px-5">
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4 pt-3 border-top">
+                    <button type="button" id="saveBtn" class="btn btn-vintage btn-vintage-primary btn-lg px-5">
                         <i class="bi bi-check-lg"></i> Terapkan & Simpan
                     </button>
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                    <a href="{{ url_for('index') }}" class="btn btn-vintage btn-vintage-secondary btn-lg ms-2">
                         <i class="bi bi-x-lg"></i> Batal
                     </a>
                 </div>
