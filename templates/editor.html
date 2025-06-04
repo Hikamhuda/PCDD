@@ -1,272 +1,279 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Image Editor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <title>Editor Gambar Lanjutan</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .image-container {
-            position: relative;
-            max-width: 800px;
-            margin: 0 auto;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        #imagePreview {
-            width: 100%;
-            display: block;
-        }
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            display: none;
-        }
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-        }
-        .slider-container {
-            margin-bottom: 1.5rem;
-        }
-        .slider-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-        }
-        .preset-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-        }
-        .preset-btn {
-            flex: 1;
-            min-width: 120px;
-        }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-bottom: 3rem; }
+        .image-container { position: relative; max-width: 700px; margin: 1rem auto; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        #imagePreview { width: 100%; display: block; background-color: #fff; min-height: 200px; /* Mencegah collapse jika gambar belum ada */}
+        .loading-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 10; display: none; }
+        .controls-container { background-color: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); margin-top: 1.5rem; }
+        .slider-container { margin-bottom: 1.2rem; }
+        .slider-label { display: flex; justify-content: space-between; margin-bottom: 0.4rem; font-size: 0.9rem; color: #555; }
+        .slider-label span { background-color: #e9ecef; padding: 0.1rem 0.4rem; border-radius: 4px; font-weight: 500; min-width: 35px; text-align: center; font-size: 0.85rem;}
+        .form-range { padding: 0; } 
+        .preset-buttons { display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .preset-btn { flex: 1; min-width: 110px; font-size: 0.9rem; }
+        .color-section { border: 1px solid #e0e0e0; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; background-color: #fdfdfd; }
+        .color-section h5 { margin-bottom: 1rem; color: #333; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;}
+        .nav-pills .nav-link { color: #555; font-weight: 500; }
+        .nav-pills .nav-link.active { background-color: #0d6efd; color: white; }
+        .form-range::-webkit-slider-thumb { background-color: #0d6efd; } /* Chrome, Edge, Safari */
+        .form-range::-moz-range-thumb { background-color: #0d6efd; } /* Firefox */
     </style>
 </head>
 <body>
-    <div class="container py-5">
+    <div class="container py-4">
         <div class="text-center mb-4">
-            <h2>Real-Time Image Enhancement</h2>
-            <p class="lead">Adjust parameters and see changes instantly</p>
+            <h2>Editor Gambar Lanjutan</h2>
+            <p class="lead">Sempurnakan gambar Anda dengan kontrol presisi.</p>
         </div>
 
-        <div class="image-container mb-4">
-            <img id="imagePreview" src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Image to edit">
+        <div class="image-container">
+            <img id="imagePreview" src="{{ url_for('static', filename='uploads/' + filename) if filename else '#' }}" alt="Gambar untuk diedit">
             <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Memuat...</span></div>
             </div>
         </div>
 
-        <!-- Preset Buttons -->
-        <div class="preset-buttons">
-            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="default">
-                <i class="bi bi-arrow-counterclockwise"></i> Default
-            </button>
-            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="vivid">
-                <i class="bi bi-brightness-high"></i> Vivid
-            </button>
-            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="soft">
-                <i class="bi bi-cloud"></i> Soft
-            </button>
-            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="sharp">
-                <i class="bi bi-diamond"></i> Sharp
-            </button>
-            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="muted">
-                <i class="bi bi-droplet"></i> Muted
-            </button>
+        <div class="controls-container">
+            <div class="preset-buttons mb-4">
+                <button type="button" class="btn btn-outline-secondary preset-btn" data-preset="default"><i class="bi bi-arrow-counterclockwise"></i> Default</button>
+                <button type="button" class="btn btn-outline-primary preset-btn" data-preset="vivid"><i class="bi bi-brightness-high"></i> Jelas</button>
+                <button type="button" class="btn btn-outline-info preset-btn" data-preset="soft"><i class="bi bi-cloud-drizzle"></i> Lembut</button>
+                <button type="button" class="btn btn-outline-dark preset-btn" data-preset="sharp"><i class="bi bi-gem"></i> Tajam</button>
+                <button type="button" class="btn btn-outline-warning preset-btn" data-preset="warm"><i class="bi bi-sun"></i> Hangat</button>
+                <button type="button" class="btn btn-outline-success preset-btn" data-preset="cool"><i class="bi bi-snow2"></i> Dingin</button>
+            </div>
+
+            <form id="adjustmentForm">
+                <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="pills-general-tab" data-bs-toggle="pill" data-bs-target="#pills-general" type="button" role="tab" aria-controls="pills-general" aria-selected="true">Umum</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="pills-mixer-tab" data-bs-toggle="pill" data-bs-target="#pills-mixer" type="button" role="tab" aria-controls="pills-mixer" aria-selected="false">Color Mixer</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="pills-tabContent">
+                    <div class="tab-pane fade show active" id="pills-general" role="tabpanel" aria-labelledby="pills-general-tab">
+                        <div class="color-section">
+                            <h5>Penyesuaian Dasar</h5>
+                            <div class="slider-container">
+                                <div class="slider-label"><label for="brightness" class="form-label">Kecerahan</label><span id="brightnessValue">1.00</span></div>
+                                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.01" id="brightness" name="brightness" value="1.0">
+                            </div>
+                            <div class="slider-container">
+                                <div class="slider-label"><label for="contrast" class="form-label">Kontras</label><span id="contrastValue">1.00</span></div>
+                                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.01" id="contrast" name="contrast" value="1.0">
+                            </div>
+                            <div class="slider-container">
+                                <div class="slider-label"><label for="saturation" class="form-label">Saturasi Global</label><span id="saturationValue">1.00</span></div>
+                                <input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="saturation" name="saturation" value="1.0">
+                            </div>
+                            <div class="slider-container">
+                                <div class="slider-label"><label for="sharpness" class="form-label">Ketajaman</label><span id="sharpnessValue">1.00</span></div>
+                                <input type="range" class="form-range adjustment-slider" min="0" max="3" step="0.05" id="sharpness" name="sharpness" value="1.0">
+                            </div>
+                            <div class="slider-container">
+                                <div class="slider-label"><label for="noise_reduction" class="form-label">Reduksi Noise</label><span id="noise_reductionValue">0.0</span></div>
+                                <input type="range" class="form-range adjustment-slider" min="0" max="5" step="0.5" id="noise_reduction" name="noise_reduction" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="pills-mixer" role="tabpanel" aria-labelledby="pills-mixer-tab">
+                        <p class="text-muted small mb-3">Sesuaikan Hue, Saturasi, dan Kecerahan untuk rentang warna tertentu.</p>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="color-section">
+                                    <h5 style="color: #D32F2F;">Merah</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_r" class="form-label">Hue Shift</label><span id="hue_rValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_r" name="hue_r" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_r" class="form-label">Saturasi</label><span id="sat_rValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_r" name="sat_r" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_r" class="form-label">Kecerahan</label><span id="light_rValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_r" name="light_r" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #F57C00;">Oranye</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_o" class="form-label">Hue Shift</label><span id="hue_oValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_o" name="hue_o" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_o" class="form-label">Saturasi</label><span id="sat_oValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_o" name="sat_o" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_o" class="form-label">Kecerahan</label><span id="light_oValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_o" name="light_o" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #FBC02D;">Kuning</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_y" class="form-label">Hue Shift</label><span id="hue_yValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_y" name="hue_y" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_y" class="form-label">Saturasi</label><span id="sat_yValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_y" name="sat_y" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_y" class="form-label">Kecerahan</label><span id="light_yValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_y" name="light_y" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #388E3C;">Hijau</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_g" class="form-label">Hue Shift</label><span id="hue_gValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_g" name="hue_g" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_g" class="form-label">Saturasi</label><span id="sat_gValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_g" name="sat_g" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_g" class="form-label">Kecerahan</label><span id="light_gValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_g" name="light_g" value="1.0"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="color-section">
+                                    <h5 style="color: #0097A7;">Aqua</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_a" class="form-label">Hue Shift</label><span id="hue_aValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_a" name="hue_a" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_a" class="form-label">Saturasi</label><span id="sat_aValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_a" name="sat_a" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_a" class="form-label">Kecerahan</label><span id="light_aValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_a" name="light_a" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #1976D2;">Biru</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_b" class="form-label">Hue Shift</label><span id="hue_bValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_b" name="hue_b" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_b" class="form-label">Saturasi</label><span id="sat_bValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_b" name="sat_b" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_b" class="form-label">Kecerahan</label><span id="light_bValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_b" name="light_b" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #7B1FA2;">Ungu</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_p" class="form-label">Hue Shift</label><span id="hue_pValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_p" name="hue_p" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_p" class="form-label">Saturasi</label><span id="sat_pValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_p" name="sat_p" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_p" class="form-label">Kecerahan</label><span id="light_pValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_p" name="light_p" value="1.0"></div>
+                                </div>
+                                <div class="color-section">
+                                    <h5 style="color: #C2185B;">Magenta</h5>
+                                    <div class="slider-container"><div class="slider-label"><label for="hue_m" class="form-label">Hue Shift</label><span id="hue_mValue">0</span></div><input type="range" class="form-range adjustment-slider" min="-180" max="180" step="1" id="hue_m" name="hue_m" value="0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="sat_m" class="form-label">Saturasi</label><span id="sat_mValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="sat_m" name="sat_m" value="1.0"></div>
+                                    <div class="slider-container"><div class="slider-label"><label for="light_m" class="form-label">Kecerahan</label><span id="light_mValue">1.00</span></div><input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.01" id="light_m" name="light_m" value="1.0"></div>
+                                </div>
+                            </div>
+                        </div> </div> </div> <div class="text-center mt-4 pt-3 border-top">
+                    <button type="button" id="saveBtn" class="btn btn-primary btn-lg px-5">
+                        <i class="bi bi-check-lg"></i> Terapkan & Simpan
+                    </button>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                        <i class="bi bi-x-lg"></i> Batal
+                    </a>
+                </div>
+            </form>
         </div>
-
-        <form id="adjustmentForm">
-            <!-- Brightness -->
-            <div class="slider-container">
-                <div class="slider-label">
-                    <label for="brightness" class="form-label">Brightness</label>
-                    <span id="brightnessValue">1.0</span>
-                </div>
-                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.1" 
-                       id="brightness" name="brightness" value="1.0">
-            </div>
-
-            <!-- Contrast -->
-            <div class="slider-container">
-                <div class="slider-label">
-                    <label for="contrast" class="form-label">Contrast</label>
-                    <span id="contrastValue">1.0</span>
-                </div>
-                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.1" 
-                       id="contrast" name="contrast" value="1.0">
-            </div>
-
-            <!-- Saturation -->
-            <div class="slider-container">
-                <div class="slider-label">
-                    <label for="saturation" class="form-label">Saturation</label>
-                    <span id="saturationValue">1.0</span>
-                </div>
-                <input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.1" 
-                       id="saturation" name="saturation" value="1.0">
-            </div>
-
-            <!-- Sharpness -->
-            <div class="slider-container">
-                <div class="slider-label">
-                    <label for="sharpness" class="form-label">Sharpness</label>
-                    <span id="sharpnessValue">1.0</span>
-                </div>
-                <input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.1" 
-                       id="sharpness" name="sharpness" value="1.0">
-            </div>
-
-            <!-- Noise Reduction -->
-            <div class="slider-container">
-                <div class="slider-label">
-                    <label for="noise_reduction" class="form-label">Noise Reduction</label>
-                    <span id="noiseValue">0</span>
-                </div>
-                <input type="range" class="form-range adjustment-slider" min="0" max="5" step="1" 
-                       id="noise_reduction" name="noise_reduction" value="0">
-            </div>
-
-            <div class="text-center mt-4">
-                <button type="button" id="saveBtn" class="btn btn-primary btn-lg">
-                    <i class="bi bi-save"></i> Save Final Image
-                </button>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
-            </div>
-        </form>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Variabel untuk debounce
         let updateTimeout;
-        const DEBOUNCE_TIME = 300; // ms
-        
-        // Preset values
-        const PRESETS = {
-            default: { brightness: 1.0, contrast: 1.0, saturation: 1.0, sharpness: 1.0, noise_reduction: 0 },
-            vivid: { brightness: 1.1, contrast: 1.3, saturation: 1.5, sharpness: 1.2, noise_reduction: 0 },
-            soft: { brightness: 1.05, contrast: 0.9, saturation: 0.8, sharpness: 0.7, noise_reduction: 1 },
-            sharp: { brightness: 1.0, contrast: 1.4, saturation: 1.0, sharpness: 1.8, noise_reduction: 0 },
-            muted: { brightness: 0.95, contrast: 1.1, saturation: 0.5, sharpness: 1.0, noise_reduction: 1 }
+        const DEBOUNCE_TIME = 200; 
+
+        const ALL_SLIDERS_DEFAULT = {
+            brightness: 1.0, contrast: 1.0, saturation: 1.0, sharpness: 1.0, noise_reduction: 0,
+            hue_r: 0, sat_r: 1.0, light_r: 1.0,
+            hue_o: 0, sat_o: 1.0, light_o: 1.0,
+            hue_y: 0, sat_y: 1.0, light_y: 1.0,
+            hue_g: 0, sat_g: 1.0, light_g: 1.0,
+            hue_a: 0, sat_a: 1.0, light_a: 1.0,
+            hue_b: 0, sat_b: 1.0, light_b: 1.0,
+            hue_p: 0, sat_p: 1.0, light_p: 1.0,
+            hue_m: 0, sat_m: 1.0, light_m: 1.0
         };
         
-        // Fungsi untuk mengupdate gambar
-        function updateImage() {
-            const form = document.getElementById('adjustmentForm');
+        const PRESETS = {
+            default: { ...ALL_SLIDERS_DEFAULT },
+            vivid: { ...ALL_SLIDERS_DEFAULT, brightness: 1.05, contrast: 1.1, saturation: 1.25, sharpness: 0.2, sat_r: 1.15, sat_o: 1.1, sat_y: 1.1, sat_g: 1.05, sat_b:1.1},
+            soft: { ...ALL_SLIDERS_DEFAULT, brightness: 1.0, contrast: 0.9, saturation: 0.9, sharpness: 0.0, noise_reduction: 0.5, light_r: 0.95, light_g: 0.95 },
+            sharp: { ...ALL_SLIDERS_DEFAULT, contrast: 1.05, saturation: 1.0, sharpness: 0.7 },
+            warm: { ...ALL_SLIDERS_DEFAULT, hue_r: 5, hue_o: 8, hue_y: 5, light_r: 1.02, light_o: 1.02, light_y: 1.02, hue_b: -5, hue_a: -3, light_b: 0.98, light_a: 0.98},
+            cool: { ...ALL_SLIDERS_DEFAULT, hue_b: 5, hue_a: 8, light_b: 1.02, light_a: 1.02, hue_r: -5, hue_o: -3, light_r: 0.98, light_o: 0.98}
+        };
+
+        function formatSliderValue(value, step) {
+            const val = parseFloat(value);
+            if (isNaN(val)) return "0"; // Default if not a number
+            return val.toFixed(step.includes('.') ? (step.split('.')[1] || '').length : 0);
+        }
+
+        function updateImagePreview() {
             const formData = new FormData();
+            document.querySelectorAll('.adjustment-slider').forEach(slider => formData.append(slider.name, slider.value));
             
-            // Tambahkan parameter slider ke FormData
-            document.querySelectorAll('.adjustment-slider').forEach(slider => {
-                formData.append(slider.name, slider.value);
-            });
+            document.getElementById('loadingOverlay').style.display = 'flex';
             
-            // Tambahkan file gambar asli
-            const originalImage = "{{ url_for('static', filename='uploads/' + filename) }}";
-            fetch(originalImage)
+            const originalUploadedFileUrl = "{{ url_for('static', filename='uploads/' + filename) }}";
+            fetch(originalUploadedFileUrl)
                 .then(res => res.blob())
                 .then(blob => {
-                    formData.append('file', blob, "{{ filename }}");
-                    
-                    // Tampilkan loading
-                    document.getElementById('loadingOverlay').style.display = 'flex';
-                    
-                    // Kirim ke server
-                    fetch("{{ url_for('realtime_adjust') }}", {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.image) {
-                            document.getElementById('imagePreview').src = `data:image/jpeg;base64,${data.image}`;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    })
-                    .finally(() => {
-                        document.getElementById('loadingOverlay').style.display = 'none';
-                    });
-                });
+                    formData.append('file', blob, "{{ filename }}"); 
+                    return fetch("{{ url_for('realtime_adjust') }}", { method: 'POST', body: formData });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image) {
+                        document.getElementById('imagePreview').src = `data:image/jpeg;base64,${data.image}`;
+                    } else if (data.error) {
+                        console.error('Error processing image:', data.error);
+                        alert('Error: ' + data.error); 
+                    }
+                })
+                .catch(error => {
+                    console.error('Network or JS Error:', error);
+                    alert('Terjadi kesalahan jaringan atau skrip.');
+                })
+                .finally(() => document.getElementById('loadingOverlay').style.display = 'none');
         }
         
-        // Event listener untuk slider
         document.querySelectorAll('.adjustment-slider').forEach(slider => {
-            // Update nilai tampilan
             slider.addEventListener('input', function() {
-                document.getElementById(`${this.id}Value`).textContent = this.value;
-            });
-            
-            // Update gambar dengan debounce
-            slider.addEventListener('input', function() {
+                const valueDisplay = document.getElementById(`${this.id}Value`);
+                if (valueDisplay) valueDisplay.textContent = formatSliderValue(this.value, this.step);
                 clearTimeout(updateTimeout);
-                updateTimeout = setTimeout(updateImage, DEBOUNCE_TIME);
+                updateTimeout = setTimeout(updateImagePreview, DEBOUNCE_TIME);
             });
         });
         
-        // Event listener untuk preset buttons
         document.querySelectorAll('.preset-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                const preset = this.dataset.preset;
-                const presetValues = PRESETS[preset];
-                
-                // Set semua slider ke nilai preset
-                for (const [key, value] of Object.entries(presetValues)) {
+                const presetName = this.dataset.preset;
+                const presetValues = PRESETS[presetName];
+                if (!presetValues) return;
+
+                for (const [key, defaultValue] of Object.entries(ALL_SLIDERS_DEFAULT)) { 
                     const slider = document.getElementById(key);
                     const valueDisplay = document.getElementById(`${key}Value`);
-                    
-                    if (slider && valueDisplay) {
-                        slider.value = value;
-                        valueDisplay.textContent = value;
-                    }
+                    const presetVal = presetValues[key] !== undefined ? presetValues[key] : defaultValue; 
+
+                    if (slider) slider.value = presetVal;
+                    if (valueDisplay && slider) valueDisplay.textContent = formatSliderValue(presetVal, slider.step);
                 }
-                
-                // Trigger update gambar
-                updateImage();
+                updateImagePreview();
             });
         });
         
-        // Tombol save
         document.getElementById('saveBtn').addEventListener('click', function() {
             const form = document.getElementById('adjustmentForm');
             const formData = new FormData(form);
-            
-            // Kirim sebagai POST biasa ke endpoint process_image
-            fetch("{{ url_for('process_image', filename=filename) }}", {
-                method: 'POST',
-                body: formData
-            })
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            fetch("{{ url_for('process_image', filename=filename) }}", { method: 'POST', body: formData })
             .then(response => {
                 if (response.redirected) {
                     window.location.href = response.url;
+                } else {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    response.json().then(data => { // Mencoba parse JSON jika ada error
+                        if(data.error) alert("Gagal menyimpan: " + data.error);
+                        else alert("Gagal menyimpan. Silakan cek konsol untuk detail.");
+                    }).catch(() => alert("Gagal menyimpan. Terjadi kesalahan tak terduga."));
                 }
+            })
+            .catch(error => {
+                console.error('Error saving:', error);
+                alert("Gagal menyimpan gambar. Silakan coba lagi.");
+                document.getElementById('loadingOverlay').style.display = 'none';
             });
         });
         
-        // Inisialisasi pertama kali
-        updateImage();
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.adjustment-slider').forEach(slider => {
+                 const valueDisplay = document.getElementById(`${slider.id}Value`);
+                 if (valueDisplay) valueDisplay.textContent = formatSliderValue(slider.value, slider.step);
+            });
+             if (!"{{filename}}") { // Jika tidak ada filename, mungkin nonaktifkan tombol simpan
+                // document.getElementById('saveBtn').disabled = true;
+             }
+        });
     </script>
 </body>
 </html>

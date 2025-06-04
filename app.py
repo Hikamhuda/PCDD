@@ -9,264 +9,207 @@ import mediapipe as mp
 from datetime import datetime
 from io import BytesIO
 import base64
+import traceback # Ditambahkan untuk logging error yang lebih baik
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['PROCESSED_FOLDER'] = 'static/processed'
-app.config['SECRET_KEY'] = 'your_secret_key_here' # For production, use environment variables
+app.config['SECRET_KEY'] = 'ganti_dengan_kunci_rahasia_yang_sangat_kuat_dan_unik' # Ganti ini!
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 # Initialize MediaPipe Hands (ONCE globally for efficiency)
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(
-    static_image_mode=False,        # Process continuously for video stream
-    max_num_hands=2,                # Detect up to two hands
-    min_detection_confidence=0.7,   # Higher confidence for initial detection
-    min_tracking_confidence=0.5     # Lower confidence for tracking after detection
+    static_image_mode=False,
+    max_num_hands=2,
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.5
 )
-mp_drawing = mp.solutions.drawing_utils # Utility for drawing landmarks
+mp_drawing = mp.solutions.drawing_utils
 
-# Function to check allowed file extensions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Optimized function to detect hi-five gesture (all fingers open)
-# Takes processed hand landmarks and handedness as input
 def detect_hi_five_optimized(hand_landmarks_obj, handedness_label):
     if not hand_landmarks_obj:
         return False
-        
-    landmarks = hand_landmarks_obj.landmark # Access the list of landmark objects
-
-    # MediaPipe HandLandmark enum for clarity
+    landmarks = hand_landmarks_obj.landmark
     lm = mp_hands.HandLandmark
-
     finger_open_status = []
-
-    # Thumb: Check if it's extended.
-    # Compare Y of THUMB_TIP and THUMB_IP (tip should be higher/smaller Y).
-    # For side extension, compare X of THUMB_TIP and THUMB_MCP based on handedness (mirrored view).
     thumb_tip_y = landmarks[lm.THUMB_TIP].y
     thumb_ip_y = landmarks[lm.THUMB_IP].y
     thumb_tip_x = landmarks[lm.THUMB_TIP].x
-    thumb_mcp_x = landmarks[lm.THUMB_MCP].x # Metacarpophalangeal joint (base of thumb)
-
-    # Primary check: thumb pointing upwards (tip higher than IP joint)
+    thumb_mcp_x = landmarks[lm.THUMB_MCP].x
     thumb_vertically_open = thumb_tip_y < thumb_ip_y
-    
-    # Secondary check: thumb horizontally extended from palm
     thumb_horizontally_open = False
-    if handedness_label == "Right": # In mirrored view, right hand thumb tip is to the left of MCP when extended
-        thumb_horizontally_open = thumb_tip_x < thumb_mcp_x 
-    elif handedness_label == "Left": # In mirrored view, left hand thumb tip is to the right of MCP when extended
-        thumb_horizontally_open = thumb_tip_x > thumb_mcp_x
-    
-    # Thumb is considered open if either vertically or significantly horizontally open.
-    # A simple OR condition can work here. More complex logic might involve angles or distances.
-    if thumb_vertically_open or thumb_horizontally_open:
-         finger_open_status.append(True)
-    else:
-         finger_open_status.append(False)
-
-    # Other fingers: Index, Middle, Ring, Pinky
-    # Compare Y of TIP and PIP. Tip should be higher (smaller Y) than PIP.
-    # Also ensure PIP is higher than MCP to confirm extension, not just curled up.
+    if handedness_label == "Right": thumb_horizontally_open = thumb_tip_x < thumb_mcp_x
+    elif handedness_label == "Left": thumb_horizontally_open = thumb_tip_x > thumb_mcp_x
+    if thumb_vertically_open or thumb_horizontally_open: finger_open_status.append(True)
+    else: finger_open_status.append(False)
     other_fingers_tips_indices = [lm.INDEX_FINGER_TIP, lm.MIDDLE_FINGER_TIP, lm.RING_FINGER_TIP, lm.PINKY_TIP]
     other_fingers_pips_indices = [lm.INDEX_FINGER_PIP, lm.MIDDLE_FINGER_PIP, lm.RING_FINGER_PIP, lm.PINKY_PIP]
     other_fingers_mcps_indices = [lm.INDEX_FINGER_MCP, lm.MIDDLE_FINGER_MCP, lm.RING_FINGER_MCP, lm.PINKY_MCP]
-
-
     for i in range(len(other_fingers_tips_indices)):
         tip_y = landmarks[other_fingers_tips_indices[i]].y
         pip_y = landmarks[other_fingers_pips_indices[i]].y
         mcp_y = landmarks[other_fingers_mcps_indices[i]].y
-        
-        # Finger is open if tip is above PIP, and PIP is above MCP (ensures extension)
-        if tip_y < pip_y and pip_y < mcp_y:
-            finger_open_status.append(True)
-        else:
-            finger_open_status.append(False)
-            
+        if tip_y < pip_y and pip_y < mcp_y: finger_open_status.append(True)
+        else: finger_open_status.append(False)
     return all(finger_open_status)
 
-
-# Function to extract features from the image
 def extract_features(image_path):
     try:
         img = cv2.imread(image_path)
-        if img is None:
+        if img is None: 
             print(f"Warning: Could not read image at {image_path} for feature extraction.")
             return None
-            
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        mean_val = np.mean(img)
-        std_val = np.std(img)
-        
+        mean_val = np.mean(img); std_val = np.std(img)
         edges = cv2.Canny(gray, 100, 200)
         edge_pixels = np.sum(edges > 0)
         total_pixels = edges.shape[0] * edges.shape[1]
         edge_ratio = edge_pixels / total_pixels if total_pixels > 0 else 0
-        
         hist_b = cv2.calcHist([img], [0], None, [256], [0, 256])
         hist_g = cv2.calcHist([img], [1], None, [256], [0, 256])
         hist_r = cv2.calcHist([img], [2], None, [256], [0, 256])
-        
-        features = {
-            'mean': float(mean_val), # Ensure JSON serializable
-            'std_dev': float(std_val),
-            'edge_ratio': float(edge_ratio),
-            'histogram': {
-                'blue': hist_b.flatten().tolist(), # Flatten and convert to list
-                'green': hist_g.flatten().tolist(),
-                'red': hist_r.flatten().tolist()
-            }
-        }
-        return features
+        return {'mean': float(mean_val), 'std_dev': float(std_val), 'edge_ratio': float(edge_ratio),
+                'histogram': {'blue': hist_b.flatten().tolist(), 'green': hist_g.flatten().tolist(), 'red': hist_r.flatten().tolist()}}
     except Exception as e:
         print(f"Error extracting features from {image_path}: {e}")
         return None
 
-# Function to adjust image quality
-def adjust_image(image_path, brightness=1.0, contrast=1.0, saturation=1.0, sharpness=1.0, noise_reduction=0):
+def _apply_hsl_adjustments_to_pil_image(img_pil, params):
+    """Helper function to apply HSL adjustments to a PIL Image object."""
+    hsv_img = img_pil.convert('HSV')
+    hsv_np = np.array(hsv_img, dtype=np.float32)
+    h_channel, s_channel, v_channel = hsv_np[:,:,0], hsv_np[:,:,1], hsv_np[:,:,2]
+
+    S_THRESH = params.get('s_thresh', 70) 
+    V_THRESH = params.get('v_thresh', 50)
+
+    # Rentang Warna HSV (H: 0-255 untuk Pillow) - Ini mungkin perlu disesuaikan!
+    color_ranges = {
+        "r": ([0, S_THRESH, V_THRESH], [8, 255, 255], [247, S_THRESH, V_THRESH], [255, 255, 255]), # Reds
+        "o": ([9, S_THRESH, V_THRESH], [23, 255, 255]),    # Oranges
+        "y": ([24, S_THRESH, V_THRESH], [38, 255, 255]),   # Yellows
+        "g": ([39, S_THRESH, V_THRESH], [90, 255, 255]),   # Greens
+        "a": ([91, S_THRESH, V_THRESH], [130, 255, 255]),  # Aquas/Cyans
+        "b": ([131, S_THRESH, V_THRESH], [170, 255, 255]), # Blues
+        "p": ([171, S_THRESH, V_THRESH], [210, 255, 255]), # Purples/Violets
+        "m": ([211, S_THRESH, V_THRESH], [246, 255, 255])  # Magentas
+    }
+
+    for color_key_short in ["r", "o", "y", "g", "a", "b", "p", "m"]:
+        hue_delta = params.get(f'hue_{color_key_short}_delta', 0)
+        sat_factor = params.get(f'sat_{color_key_short}_factor', 1.0)
+        light_factor = params.get(f'light_{color_key_short}_factor', 1.0)
+
+        if not (hue_delta == 0 and sat_factor == 1.0 and light_factor == 1.0): # Hanya proses jika ada perubahan
+            ranges = color_ranges[color_key_short]
+            current_mask = np.zeros_like(h_channel, dtype=bool)
+
+            if color_key_short == "r": 
+                lr1, ur1, lr2, ur2 = ranges
+                mask1 = (h_channel >= lr1[0]) & (h_channel <= ur1[0]) & \
+                        (s_channel >= lr1[1]) & (s_channel <= ur1[1]) & \
+                        (v_channel >= lr1[2]) & (v_channel <= ur1[2])
+                mask2 = (h_channel >= lr2[0]) & (h_channel <= ur2[0]) & \
+                        (s_channel >= lr2[1]) & (s_channel <= ur2[1]) & \
+                        (v_channel >= lr2[2]) & (v_channel <= ur2[2])
+                current_mask = mask1 | mask2
+            else:
+                lr, ur = ranges
+                current_mask = (h_channel >= lr[0]) & (h_channel <= ur[0]) & \
+                               (s_channel >= lr[1]) & (s_channel <= ur[1]) & \
+                               (v_channel >= lr[2]) & (v_channel <= ur[2])
+
+            if np.any(current_mask):
+                hue_adj_val = (hue_delta / 360.0) * 255.0
+                h_channel[current_mask] = (h_channel[current_mask] + hue_adj_val) % 256
+                s_channel[current_mask] = np.clip(s_channel[current_mask] * sat_factor, 0, 255)
+                v_channel[current_mask] = np.clip(v_channel[current_mask] * light_factor, 0, 255)
+
+    hsv_np[:,:,0] = h_channel
+    hsv_np[:,:,1] = s_channel
+    hsv_np[:,:,2] = v_channel
+    
+    adjusted_hsv_img = Image.fromarray(hsv_np.astype(np.uint8), 'HSV')
+    return adjusted_hsv_img.convert("RGB")
+
+def adjust_image(image_path, params):
     try:
-        img = Image.open(image_path)
-        img = img.convert("RGB") # Ensure it's in RGB for consistent processing
+        img_pil = Image.open(image_path).convert("RGB")
         
-        if brightness != 1.0:
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(brightness)
-        
-        if contrast != 1.0:
-            enhancer = ImageEnhance.Contrast(img)
-            img = enhancer.enhance(contrast)
-        
-        if saturation != 1.0:
-            enhancer = ImageEnhance.Color(img)
-            img = enhancer.enhance(saturation)
-        
-        if sharpness != 1.0:
-            enhancer = ImageEnhance.Sharpness(img)
-            img = enhancer.enhance(sharpness)
-        
-        if noise_reduction > 0:
-            # GaussianBlur radius in Pillow is different from OpenCV's kernel size.
-            # Keep it simple; users can experiment with values.
-            img = img.filter(ImageFilter.GaussianBlur(radius=noise_reduction))
+        # Penyesuaian Umum
+        if params.get('brightness', 1.0) != 1.0:
+            img_pil = ImageEnhance.Brightness(img_pil).enhance(params['brightness'])
+        if params.get('contrast', 1.0) != 1.0:
+            img_pil = ImageEnhance.Contrast(img_pil).enhance(params['contrast'])
+        if params.get('saturation', 1.0) != 1.0: 
+            img_pil = ImageEnhance.Color(img_pil).enhance(params['saturation'])
+        if params.get('sharpness', 1.0) != 1.0:
+            img_pil = ImageEnhance.Sharpness(img_pil).enhance(params['sharpness'])
+        if params.get('noise_reduction', 0) > 0:
+            img_pil = img_pil.filter(ImageFilter.GaussianBlur(radius=params['noise_reduction']))
+
+        # Penyesuaian HSL per warna menggunakan helper
+        img_pil = _apply_hsl_adjustments_to_pil_image(img_pil, params)
         
         base_name = os.path.basename(image_path)
         name_part, ext_part = os.path.splitext(base_name)
-        # Ensure processed filename doesn't grow indefinitely with "processed_" prefix
         if name_part.startswith("processed_"):
             name_part = name_part[len("processed_"):]
-            # Remove old timestamp if present
+            # Hapus timestamp lama jika ada
             if len(name_part) > 15 and name_part[8] == '_' and name_part[:8].isdigit() and name_part[9:15].isdigit():
-                 name_part = name_part[16:]
-
+                name_part = name_part[16:]
 
         processed_filename = f"processed_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name_part}{ext_part}"
         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
-        img.save(processed_path)
+        img_pil.save(processed_path)
         
         return processed_filename
     except Exception as e:
         print(f"Error adjusting image {image_path}: {e}")
+        traceback.print_exc()
         return None
 
-# Global variable for hi-five status (used by /check_hi_five endpoint)
 hi_five_detected_globally = False
 
 @app.route('/')
 def index():
-    # Ensure template exists or this will error
-    return render_template('index.html') 
+    return render_template('index.html')
 
 @app.route('/capture_page')
 def capture_page():
-    # Ensure template exists
     return render_template('capture.html')
 
 def generate_frames():
-    global hi_five_detected_globally # Use the global 'hands' instance initialized outside
-    
-    cap = cv2.VideoCapture(0) # Or specific camera index
-    if not cap.isOpened():
-        print("Error: Could not open video capture device.")
-        # Yield an error message or image if you want to show it on the client
-        # For now, just stops generation.
-        return 
-
+    global hi_five_detected_globally; cap = cv2.VideoCapture(0)
+    if not cap.isOpened(): print("Error: Could not open video capture device."); return
     while True:
         success, frame = cap.read()
-        if not success:
-            print("Error: Failed to capture frame. Skipping.")
-            time.sleep(0.1) # Wait a bit before trying again
-            continue
-
-        frame = cv2.flip(frame, 1)  # Mirror effect for intuitive interaction
-        
-        # Convert the BGR image to RGB for MediaPipe.
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        
-        # Process the frame to find hands. This is the main detection step.
-        results = hands.process(frame_rgb) # Use the global 'hands' instance
-        
-        current_frame_hi_five = False # Reset for current frame, for any hand
-        
+        if not success: print("Error: Failed to capture frame."); time.sleep(0.1); continue
+        frame = cv2.flip(frame, 1); frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = hands.process(frame_rgb); current_frame_hi_five = False
         if results.multi_hand_landmarks:
             for hand_idx, hand_landmarks in enumerate(results.multi_hand_landmarks):
-                # Draw hand landmarks on the original BGR frame.
-                mp_drawing.draw_landmarks(
-                    frame,
-                    hand_landmarks,
-                    mp_hands.HAND_CONNECTIONS,
-                    mp_drawing.DrawingSpec(color=(121, 22, 76), thickness=2, circle_radius=4), # Landmark style
-                    mp_drawing.DrawingSpec(color=(250, 44, 250), thickness=2, circle_radius=2)  # Connection style
-                )
-                
+                mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS,
+                                          mp_drawing.DrawingSpec(color=(121,22,76), thickness=2, circle_radius=4),
+                                          mp_drawing.DrawingSpec(color=(250,44,250), thickness=2, circle_radius=2))
                 handedness_label = "Unknown"
                 if results.multi_handedness and len(results.multi_handedness) > hand_idx:
-                    handedness = results.multi_handedness[hand_idx]
-                    handedness_label = handedness.classification[0].label # 'Left' or 'Right'
-                    score = handedness.classification[0].score
-                    
-                    # Display handedness
-                    cv2.putText(frame, f"{handedness_label} Hand ({score:.2f})", 
-                                (int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x * frame.shape[1] - 30), 
-                                 int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y * frame.shape[0] - 30)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 2, cv2.LINE_AA)
-
-                # Perform hi-five detection using the optimized function
+                    handedness = results.multi_handedness[hand_idx]; handedness_label = handedness.classification[0].label; score = handedness.classification[0].score
+                    cv2.putText(frame, f"{handedness_label} ({score:.2f})", (int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x*frame.shape[1]-30), int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y*frame.shape[0]-30)), cv2.FONT_HERSHEY_SIMPLEX,0.7,(200,200,200),2,cv2.LINE_AA)
                 if detect_hi_five_optimized(hand_landmarks, handedness_label):
                     current_frame_hi_five = True
-                    # Display "HI-FIVE!" near the detected hand
-                    cv2.putText(frame, "HI-FIVE!", 
-                                (int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x * frame.shape[1]), 
-                                 int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y * frame.shape[0] - 60)),
-                                cv2.FONT_HERSHEY_TRIPLEX, 1.2, (0, 255, 0), 3, cv2.LINE_AA)
-        
-        # Update the global hi-five status
+                    cv2.putText(frame, "HI-FIVE!", (int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].x*frame.shape[1]), int(hand_landmarks.landmark[mp_hands.HandLandmark.WRIST].y*frame.shape[0]-60)), cv2.FONT_HERSHEY_TRIPLEX,1.2,(0,255,0),3,cv2.LINE_AA)
         hi_five_detected_globally = current_frame_hi_five
-        
-        if hi_five_detected_globally: # Optional: General message if any hand is a hi-five
-             cv2.putText(frame, "HI-FIVE DETECTED!", (20, 40),
-                             cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2, cv2.LINE_AA)
-
-        # Encode the frame in JPEG format.
+        if hi_five_detected_globally: cv2.putText(frame, "HI-FIVE DETECTED!", (20,40), cv2.FONT_HERSHEY_SIMPLEX,1,(0,0,255),2,cv2.LINE_AA)
         ret, buffer = cv2.imencode('.jpg', frame)
-        if not ret:
-            print("Error: Failed to encode frame to JPEG.")
-            continue
-        
+        if not ret: print("Error: Failed to encode frame."); continue
         frame_bytes = buffer.tobytes()
-        
-        # Yield the frame in the multipart response.
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-    
-    print("Releasing video capture device.")
+        yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
     cap.release()
-    # cv2.destroyAllWindows() # Usually not needed/problematic in web server threads
 
 @app.route('/video_feed')
 def video_feed():
@@ -274,74 +217,66 @@ def video_feed():
 
 @app.route('/check_hi_five')
 def check_hi_five():
-    global hi_five_detected_globally
     return {'hi_five': hi_five_detected_globally}
 
 @app.route('/capture', methods=['POST'])
 def capture():
-    global hi_five_detected_globally
-    hi_five_detected_globally = False # Reset status on new capture
-    
-    # Consider if video_feed's camera should be paused/released here
-    # For simplicity, we open a new instance. This might conflict if /video_feed is active.
-    cap = cv2.VideoCapture(0) 
-    if not cap.isOpened():
-        flash('Could not access the camera.', 'error')
-        return redirect(url_for('capture_page')) # Or 'index'
-
-    ret, frame = cap.read()
-    cap.release() # Release immediately after capture
-
+    global hi_five_detected_globally; hi_five_detected_globally = False
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened(): flash('Tidak dapat mengakses kamera.', 'error'); return redirect(url_for('capture_page'))
+    ret, frame = cap.read(); cap.release()
     if ret:
-        frame = cv2.flip(frame, 1) # Mirror effect consistent with video_feed
+        frame = cv2.flip(frame, 1)
         filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        try:
-            cv2.imwrite(filepath, frame)
-            print(f"Image captured and saved to {filepath}")
-            return redirect(url_for('edit', filename=filename))
-        except Exception as e:
-            print(f"Error saving captured image: {e}")
-            flash('Error saving captured image.', 'error')
-            return redirect(url_for('capture_page'))
-    else:
-        flash('Failed to capture image from camera.', 'error')
-        return redirect(url_for('capture_page'))
+        try: cv2.imwrite(filepath, frame); return redirect(url_for('edit', filename=filename))
+        except Exception as e: print(f"Error saving captured: {e}"); flash('Gagal menyimpan gambar.', 'error'); return redirect(url_for('capture_page'))
+    else: flash('Gagal mengambil gambar dari kamera.', 'error'); return redirect(url_for('capture_page'))
 
+def _parse_adjustment_params_from_form(form_data):
+    params = {
+        'brightness': float(form_data.get('brightness', 1.0)),
+        'contrast': float(form_data.get('contrast', 1.0)),
+        'saturation': float(form_data.get('saturation', 1.0)), # Global saturation
+        'sharpness': float(form_data.get('sharpness', 1.0)),
+        'noise_reduction': float(form_data.get('noise_reduction', 0)),
+    }
+    # Parsing HSL untuk setiap channel warna
+    for color_key_short in ["r", "o", "y", "g", "a", "b", "p", "m"]:
+        params[f'hue_{color_key_short}_delta'] = int(form_data.get(f'hue_{color_key_short}', 0))
+        params[f'sat_{color_key_short}_factor'] = float(form_data.get(f'sat_{color_key_short}', 1.0))
+        params[f'light_{color_key_short}_factor'] = float(form_data.get(f'light_{color_key_short}', 1.0))
+    return params
 
 @app.route('/realtime_adjust', methods=['POST'])
 def realtime_adjust():
     if 'file' not in request.files:
-        return {'error': 'No file provided'}, 400
-    
+        return {'error': 'File tidak disediakan'}, 400
     file = request.files['file']
     if file.filename == '':
-        return {'error': 'No file selected'}, 400
+        return {'error': 'File tidak dipilih'}, 400
     
     try:
-        brightness = float(request.form.get('brightness', 1.0))
-        contrast = float(request.form.get('contrast', 1.0))
-        saturation = float(request.form.get('saturation', 1.0))
-        sharpness = float(request.form.get('sharpness', 1.0))
-        noise_reduction = float(request.form.get('noise_reduction', 0))
-        
-        img = Image.open(file.stream) # Read directly from stream
-        img = img.convert("RGB")
+        params = _parse_adjustment_params_from_form(request.form)
+        img_pil = Image.open(file.stream).convert("RGB")
 
-        if brightness != 1.0:
-            img = ImageEnhance.Brightness(img).enhance(brightness)
-        if contrast != 1.0:
-            img = ImageEnhance.Contrast(img).enhance(contrast)
-        if saturation != 1.0:
-            img = ImageEnhance.Color(img).enhance(saturation)
-        if sharpness != 1.0:
-            img = ImageEnhance.Sharpness(img).enhance(sharpness)
-        if noise_reduction > 0:
-            img = img.filter(ImageFilter.GaussianBlur(radius=noise_reduction))
+        # Penyesuaian Umum
+        if params.get('brightness', 1.0) != 1.0:
+            img_pil = ImageEnhance.Brightness(img_pil).enhance(params['brightness'])
+        if params.get('contrast', 1.0) != 1.0:
+            img_pil = ImageEnhance.Contrast(img_pil).enhance(params['contrast'])
+        if params.get('saturation', 1.0) != 1.0: 
+            img_pil = ImageEnhance.Color(img_pil).enhance(params['saturation'])
+        if params.get('sharpness', 1.0) != 1.0:
+            img_pil = ImageEnhance.Sharpness(img_pil).enhance(params['sharpness'])
+        if params.get('noise_reduction', 0) > 0:
+            img_pil = img_pil.filter(ImageFilter.GaussianBlur(radius=params['noise_reduction']))
+        
+        # Penyesuaian HSL per warna menggunakan helper
+        img_pil = _apply_hsl_adjustments_to_pil_image(img_pil, params)
         
         buffer = BytesIO()
-        img.save(buffer, format="JPEG") # Or PNG if preferred
+        img_pil.save(buffer, format="JPEG") 
         buffer.seek(0)
         
         img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
@@ -349,104 +284,63 @@ def realtime_adjust():
 
     except Exception as e:
         print(f"Error in realtime_adjust: {e}")
-        return {'error': f'Error processing image: {str(e)}'}, 500
-
+        traceback.print_exc()
+        return {'error': f'Gagal memproses gambar: {str(e)}'}, 500
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
-        flash('No file part in the request.', 'error')
-        return redirect(request.url) # Redirect to the same page (likely index with upload form)
-    
+    if 'file' not in request.files: flash('Tidak ada bagian file.', 'error'); return redirect(request.url)
     file = request.files['file']
-    if file.filename == '':
-        flash('No file selected for uploading.', 'error')
-        return redirect(request.url)
-    
+    if file.filename == '': flash('Tidak ada file dipilih.', 'error'); return redirect(request.url)
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        
-        try:
-            file.save(filepath)
-            print(f"File uploaded successfully to {filepath}")
-            
-            # Optional: Extract features from uploaded image immediately
-            # features = extract_features(filepath)
-            # if features:
-            #     print("Extracted features from uploaded image:", features)
-            
-            return redirect(url_for('edit', filename=filename))
-        except Exception as e:
-            print(f"Error saving uploaded file {filename}: {e}")
-            flash(f'Error saving file: {str(e)}', 'error')
-            return redirect(request.url)
-    else:
-        flash('Invalid file type. Allowed types: png, jpg, jpeg, webp.', 'error')
-        return redirect(request.url)
+        try: file.save(filepath); return redirect(url_for('edit', filename=filename))
+        except Exception as e: print(f"Error saving file: {e}"); flash(f'Gagal menyimpan file: {str(e)}', 'error'); return redirect(request.url)
+    else: flash('Tipe file tidak valid.', 'error'); return redirect(request.url)
 
 @app.route('/edit/<filename>')
 def edit(filename):
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.exists(filepath):
-        flash('Image not found. It might have been moved or deleted.', 'error')
+        flash('Gambar tidak ditemukan.', 'error')
         return redirect(url_for('index'))
-    
-    # Ensure template exists
     return render_template('editor.html', filename=filename)
 
 @app.route('/process/<filename>', methods=['POST'])
 def process_image(filename):
     original_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.exists(original_path):
-        flash('Original image not found for processing.', 'error')
+        flash('Gambar asli tidak ditemukan.', 'error')
         return redirect(url_for('edit', filename=filename))
         
     try:
-        brightness = float(request.form.get('brightness', 1.0))
-        contrast = float(request.form.get('contrast', 1.0))
-        saturation = float(request.form.get('saturation', 1.0))
-        sharpness = float(request.form.get('sharpness', 1.0))
-        noise_reduction = float(request.form.get('noise_reduction', 0)) # Ensure this is float or int as needed
-        
-        processed_filename = adjust_image(
-            original_path,
-            brightness, contrast, saturation, sharpness, noise_reduction
-        )
+        params = _parse_adjustment_params_from_form(request.form)
+        processed_filename = adjust_image(original_path, params)
         
         if processed_filename:
             return redirect(url_for('result', filename=processed_filename))
         else:
-            flash('Error processing image. Adjustments might have failed.', 'error')
+            flash('Gagal memproses gambar. Penyesuaian mungkin gagal.', 'error')
             return redirect(url_for('edit', filename=filename))
             
     except ValueError:
-        flash('Invalid input for adjustment parameters. Please enter numbers only.', 'error')
+        flash('Input tidak valid untuk parameter. Harap masukkan angka.', 'error')
         return redirect(url_for('edit', filename=filename))
     except Exception as e:
         print(f"Error in process_image for {filename}: {e}")
-        flash(f'An unexpected error occurred: {str(e)}', 'error')
+        traceback.print_exc()
+        flash(f'Terjadi kesalahan tak terduga: {str(e)}', 'error')
         return redirect(url_for('edit', filename=filename))
 
 @app.route('/result/<filename>')
 def result(filename):
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
-    if not os.path.exists(processed_path):
-        flash('Processed image not found. It might have been deleted or an error occurred.', 'error')
-        return redirect(url_for('index'))
-    
-    features = extract_features(processed_path) # Extract features from the processed image
-    
-    # Ensure template exists
-    return render_template('result.html', 
-                           filename=filename,
-                           features=features if features else {}) # Pass empty dict if features are None
+    if not os.path.exists(processed_path): flash('Gambar yang diproses tidak ditemukan.', 'error'); return redirect(url_for('index'))
+    features = extract_features(processed_path)
+    return render_template('result.html', filename=filename, features=features if features else {})
 
 if __name__ == '__main__':
-    # Create upload and processed directories if they don't exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     os.makedirs(app.config['PROCESSED_FOLDER'], exist_ok=True)
-    
-    # For development: app.run(debug=True)
-    # For production, use a proper WSGI server like Gunicorn or Waitress.
-    app.run(debug=True, host='0.0.0.0', port=5000) # host='0.0.0.0' makes it accessible on network
+    app.run(debug=True, host='0.0.0.0', port=5000) # host='0.0.0.0' membuatnya bisa diakses di jaringan
