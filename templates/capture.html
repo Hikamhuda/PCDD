@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photobooth Capture</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .camera-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        #videoFeed {
+            width: 100%;
+            display: block;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 2rem;
+            display: none;
+        }
+        .instructions {
+            background-color: #6e8efb;
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .hand-symbol {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="text-center mb-4">
+            <h2>Hi-Five Photobooth</h2>
+            <p class="lead">Show hi-five gesture to automatically capture</p>
+        </div>
+
+        <div class="instructions">
+            <div class="hand-symbol">✋</div>
+            <p>Hold your hand open with all fingers extended (hi-five gesture) to start countdown</p>
+        </div>
+
+        <div class="camera-container mb-4">
+            <img id="videoFeed" src="{{ url_for('video_feed') }}">
+            <div class="overlay" id="countdownOverlay">
+                <div id="countdown">5</div>
+                <div>Smile!</div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button id="captureBtn" class="btn btn-primary btn-lg">
+                <i class="bi bi-camera-fill"></i> Manual Capture
+            </button>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variabel untuk deteksi hi-five
+        let hiFiveDetected = false;
+        let countdownActive = false;
+        let countdownInterval;
+        
+        // Fungsi untuk memulai countdown
+        function startCountdown() {
+            if (countdownActive) return;
+            
+            countdownActive = true;
+            let count = 5;
+            const countdownOverlay = document.getElementById('countdownOverlay');
+            const countdownElement = document.getElementById('countdown');
+            
+            countdownOverlay.style.display = 'flex';
+            countdownElement.textContent = count;
+            
+            countdownInterval = setInterval(() => {
+                count--;
+                countdownElement.textContent = count;
+                
+                if (count <= 0) {
+                    clearInterval(countdownInterval);
+                    capturePhoto();
+                    countdownOverlay.style.display = 'none';
+                    countdownActive = false;
+                }
+            }, 1000);
+        }
+        
+        // Fungsi untuk capture foto
+        function capturePhoto() {
+            fetch("{{ url_for('capture') }}", {
+                method: 'POST'
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+            });
+        }
+        
+        // Event listener untuk tombol capture manual
+        document.getElementById('captureBtn').addEventListener('click', capturePhoto);
+        
+        // Deteksi hi-five dari server (gunakan WebSocket atau polling)
+        // Ini adalah simulasi, dalam implementasi nyata gunakan WebSocket
+        function checkHiFive() {
+            fetch("{{ url_for('check_hi_five') }}")
+            .then(response => response.json())
+            .then(data => {
+                if (data.hi_five && !hiFiveDetected) {
+                    hiFiveDetected = true;
+                    startCountdown();
+                } else if (!data.hi_five) {
+                    hiFiveDetected = false;
+                }
+                
+                // Polling setiap 500ms
+                setTimeout(checkHiFive, 500);
+            });
+        }
+        
+        // Mulai polling
+        checkHiFive();
+    </script>
+</body>
+</html>

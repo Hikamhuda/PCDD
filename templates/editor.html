@@ -1,40 +1,272 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Edit Foto</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Image Editor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .image-container {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        #imagePreview {
+            width: 100%;
+            display: block;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            display: none;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .slider-container {
+            margin-bottom: 1.5rem;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        .preset-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .preset-btn {
+            flex: 1;
+            min-width: 120px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Edit Foto</h1>
-    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Foto" style="max-width: 500px;">
+    <div class="container py-5">
+        <div class="text-center mb-4">
+            <h2>Real-Time Image Enhancement</h2>
+            <p class="lead">Adjust parameters and see changes instantly</p>
+        </div>
 
-    <form method="POST" action="{{ url_for('adjust', filename=filename) }}">
-        <div>
-            <label for="brightness">Brightness:</label>
-            <input type="range" id="brightness" name="brightness" min="0.1" max="2.0" step="0.1" value="1.0">
-            <span id="brightnessValue">1.0</span>
+        <div class="image-container mb-4">
+            <img id="imagePreview" src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Image to edit">
+            <div class="loading-overlay" id="loadingOverlay">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
         </div>
-        <div>
-            <label for="contrast">Contrast:</label>
-            <input type="range" id="contrast" name="contrast" min="0.1" max="2.0" step="0.1" value="1.0">
-            <span id="contrastValue">1.0</span>
+
+        <!-- Preset Buttons -->
+        <div class="preset-buttons">
+            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="default">
+                <i class="bi bi-arrow-counterclockwise"></i> Default
+            </button>
+            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="vivid">
+                <i class="bi bi-brightness-high"></i> Vivid
+            </button>
+            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="soft">
+                <i class="bi bi-cloud"></i> Soft
+            </button>
+            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="sharp">
+                <i class="bi bi-diamond"></i> Sharp
+            </button>
+            <button type="button" class="btn btn-outline-primary preset-btn" data-preset="muted">
+                <i class="bi bi-droplet"></i> Muted
+            </button>
         </div>
-        <div>
-            <label for="saturation">Saturation:</label>
-            <input type="range" id="saturation" name="saturation" min="0.0" max="2.0" step="0.1" value="1.0">
-            <span id="saturationValue">1.0</span>
-        </div>
-        <div>
-            <label for="sharpness">Sharpness:</label>
-            <input type="range" id="sharpness" name="sharpness" min="0.0" max="5.0" step="0.1" value="1.0">
-            <span id="sharpnessValue">1.0</span>
-        </div>
-        <div>
-            <label for="noise">Noise Reduction (Gaussian Blur Radius):</label>
-            <input type="range" id="noise" name="noise" min="0" max="5" step="1" value="0">
-            <span id="noiseValue">0</span>
-        </div>
-        <button type="submit">Simpan Perubahan</button>
-    </form>
+
+        <form id="adjustmentForm">
+            <!-- Brightness -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <label for="brightness" class="form-label">Brightness</label>
+                    <span id="brightnessValue">1.0</span>
+                </div>
+                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.1" 
+                       id="brightness" name="brightness" value="1.0">
+            </div>
+
+            <!-- Contrast -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <label for="contrast" class="form-label">Contrast</label>
+                    <span id="contrastValue">1.0</span>
+                </div>
+                <input type="range" class="form-range adjustment-slider" min="0.5" max="1.5" step="0.1" 
+                       id="contrast" name="contrast" value="1.0">
+            </div>
+
+            <!-- Saturation -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <label for="saturation" class="form-label">Saturation</label>
+                    <span id="saturationValue">1.0</span>
+                </div>
+                <input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.1" 
+                       id="saturation" name="saturation" value="1.0">
+            </div>
+
+            <!-- Sharpness -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <label for="sharpness" class="form-label">Sharpness</label>
+                    <span id="sharpnessValue">1.0</span>
+                </div>
+                <input type="range" class="form-range adjustment-slider" min="0" max="2" step="0.1" 
+                       id="sharpness" name="sharpness" value="1.0">
+            </div>
+
+            <!-- Noise Reduction -->
+            <div class="slider-container">
+                <div class="slider-label">
+                    <label for="noise_reduction" class="form-label">Noise Reduction</label>
+                    <span id="noiseValue">0</span>
+                </div>
+                <input type="range" class="form-range adjustment-slider" min="0" max="5" step="1" 
+                       id="noise_reduction" name="noise_reduction" value="0">
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="button" id="saveBtn" class="btn btn-primary btn-lg">
+                    <i class="bi bi-save"></i> Save Final Image
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg ms-2">
+                    <i class="bi bi-arrow-left"></i> Back
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variabel untuk debounce
+        let updateTimeout;
+        const DEBOUNCE_TIME = 300; // ms
+        
+        // Preset values
+        const PRESETS = {
+            default: { brightness: 1.0, contrast: 1.0, saturation: 1.0, sharpness: 1.0, noise_reduction: 0 },
+            vivid: { brightness: 1.1, contrast: 1.3, saturation: 1.5, sharpness: 1.2, noise_reduction: 0 },
+            soft: { brightness: 1.05, contrast: 0.9, saturation: 0.8, sharpness: 0.7, noise_reduction: 1 },
+            sharp: { brightness: 1.0, contrast: 1.4, saturation: 1.0, sharpness: 1.8, noise_reduction: 0 },
+            muted: { brightness: 0.95, contrast: 1.1, saturation: 0.5, sharpness: 1.0, noise_reduction: 1 }
+        };
+        
+        // Fungsi untuk mengupdate gambar
+        function updateImage() {
+            const form = document.getElementById('adjustmentForm');
+            const formData = new FormData();
+            
+            // Tambahkan parameter slider ke FormData
+            document.querySelectorAll('.adjustment-slider').forEach(slider => {
+                formData.append(slider.name, slider.value);
+            });
+            
+            // Tambahkan file gambar asli
+            const originalImage = "{{ url_for('static', filename='uploads/' + filename) }}";
+            fetch(originalImage)
+                .then(res => res.blob())
+                .then(blob => {
+                    formData.append('file', blob, "{{ filename }}");
+                    
+                    // Tampilkan loading
+                    document.getElementById('loadingOverlay').style.display = 'flex';
+                    
+                    // Kirim ke server
+                    fetch("{{ url_for('realtime_adjust') }}", {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.image) {
+                            document.getElementById('imagePreview').src = `data:image/jpeg;base64,${data.image}`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    })
+                    .finally(() => {
+                        document.getElementById('loadingOverlay').style.display = 'none';
+                    });
+                });
+        }
+        
+        // Event listener untuk slider
+        document.querySelectorAll('.adjustment-slider').forEach(slider => {
+            // Update nilai tampilan
+            slider.addEventListener('input', function() {
+                document.getElementById(`${this.id}Value`).textContent = this.value;
+            });
+            
+            // Update gambar dengan debounce
+            slider.addEventListener('input', function() {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updateImage, DEBOUNCE_TIME);
+            });
+        });
+        
+        // Event listener untuk preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const preset = this.dataset.preset;
+                const presetValues = PRESETS[preset];
+                
+                // Set semua slider ke nilai preset
+                for (const [key, value] of Object.entries(presetValues)) {
+                    const slider = document.getElementById(key);
+                    const valueDisplay = document.getElementById(`${key}Value`);
+                    
+                    if (slider && valueDisplay) {
+                        slider.value = value;
+                        valueDisplay.textContent = value;
+                    }
+                }
+                
+                // Trigger update gambar
+                updateImage();
+            });
+        });
+        
+        // Tombol save
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            const form = document.getElementById('adjustmentForm');
+            const formData = new FormData(form);
+            
+            // Kirim sebagai POST biasa ke endpoint process_image
+            fetch("{{ url_for('process_image', filename=filename) }}", {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+            });
+        });
+        
+        // Inisialisasi pertama kali
+        updateImage();
+    </script>
 </body>
 </html>

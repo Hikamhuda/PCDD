@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processed Image</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .image-container {
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        #processedImage {
+            width: 100%;
+            display: block;
+        }
+        .feature-card {
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="text-center mb-4">
+            <h2>Processed Image</h2>
+            <p class="lead">Your enhanced image with feature analysis</p>
+        </div>
+
+        <div class="image-container mb-4">
+            <img id="processedImage" src="{{ url_for('static', filename='processed/' + filename) }}" alt="Processed image">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card feature-card">
+                    <div class="card-header bg-primary text-white">
+                        <h4>Basic Statistics</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Mean Pixel Value
+                                <span class="badge bg-primary rounded-pill">{{ "%.2f"|format(features.mean) }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Standard Deviation
+                                <span class="badge bg-primary rounded-pill">{{ "%.2f"|format(features.std_dev) }}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Edge Ratio
+                                <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(features.edge_ratio) }}</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card feature-card">
+                    <div class="card-header bg-success text-white">
+                        <h4>Image Actions</h4>
+                    </div>
+                    <div class="card-body text-center">
+                        <a href="{{ url_for('static', filename='processed/' + filename) }}" download class="btn btn-primary btn-lg mb-3">
+                            <i class="bi bi-download"></i> Download Image
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left"></i> Back to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card feature-card">
+                    <div class="card-header bg-info text-white">
+                        <h4>Color Histograms</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="histogramChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Prepare data for the chart
+        const histogramData = {
+            labels: Array.from({length: 256}, (_, i) => i),
+            datasets: [
+                {
+                    label: 'Red Channel',
+                    data: {{ features.histogram.red | tojson }},
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Green Channel',
+                    data: {{ features.histogram.green | tojson }},
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                },
+                {
+                    label: 'Blue Channel',
+                    data: {{ features.histogram.blue | tojson }},
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    tension: 0.1
+                }
+            ]
+        };
+
+        // Create the chart
+        const ctx = document.getElementById('histogramChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: histogramData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Pixel Count'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Pixel Intensity (0-255)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
