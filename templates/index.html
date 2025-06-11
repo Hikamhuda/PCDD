@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Digital Image Photobooth</title>
+    <title>Vintage Photo Studio</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -16,6 +16,7 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:wght@400;600&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global_vintage.css') }}" />
     <style>
       :root {
         --vintage-cream: #f4f1e8;
@@ -74,19 +75,17 @@
       }
 
       .hero-section {
-        background: linear-gradient(
-          135deg,
-          rgba(212, 175, 55, 0.9),
-          rgba(160, 82, 45, 0.8),
-          rgba(139, 69, 19, 0.7)
-        );
+        background: linear-gradient(135deg, 
+          rgba(212, 175, 55, 0.9), 
+          rgba(160, 82, 45, 0.8), 
+          rgba(139, 69, 19, 0.7));
         color: var(--vintage-cream);
         padding: 4rem 2rem;
-        border-radius: 15px;
+        border-radius: 20px;
         margin-bottom: 3rem;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 15px 35px rgba(44, 24, 16, 0.3),
+        box-shadow: var(--vintage-shadow),
           inset 0 0 0 1px rgba(212, 175, 55, 0.5),
           inset 0 2px 0 rgba(255, 255, 255, 0.2);
         border: 3px solid var(--vintage-gold);
@@ -96,171 +95,159 @@
       .hero-section::before {
         content: "";
         position: absolute;
-        top: 10px;
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
         border: 2px solid rgba(212, 175, 55, 0.3);
-        border-radius: 10px;
+        border-radius: 15px;
         pointer-events: none;
       }
 
       .hero-section::after {
         content: "✦ ✦ ✦";
         position: absolute;
-        top: 20px;
+        top: 25px;
         left: 50%;
         transform: translateX(-50%);
         color: var(--vintage-gold);
-        font-size: 1.5rem;
+        font-size: 1.8rem;
         letter-spacing: 2rem;
-        opacity: 0.6;
+        opacity: 0.7;
       }
 
       .hero-section h1 {
         font-family: "Playfair Display", serif;
         font-weight: 900;
-        font-size: 3.8rem;
-        text-shadow: 2px 2px 0px rgba(44, 24, 16, 0.3),
-          0 0 10px rgba(212, 175, 55, 0.5);
+        font-size: 4.2rem;
         position: relative;
         z-index: 2;
-        margin-top: 1rem;
-        letter-spacing: -1px;
+        margin-top: 1.5rem;
+        letter-spacing: -2px;
+        background: linear-gradient(45deg, #fff, #f4f1e8, #d4af37);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero-section h1::before {
+        content: attr(data-text);
+        position: absolute;
+        top: 0.15em;
+        left: 0.15em;
+        z-index: 1;
+        color: transparent;
+        text-shadow: 3px 3px 0px rgba(44, 24, 16, 0.4), 0 0 15px rgba(212, 175, 55, 0.6);
+        pointer-events: none;
+        background: none;
+        -webkit-background-clip: initial;
+        -webkit-text-fill-color: initial;
+        background-clip: initial;
       }
 
       .hero-section p {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
         font-style: italic;
         position: relative;
         z-index: 2;
         margin-top: 1rem;
-        text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.2);
+        text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.3);
+        opacity: 0.95;
       }
 
-      .btn-custom {
-        padding: 1rem 2.5rem;
-        font-size: 1.1rem;
-        font-family: "Playfair Display", serif;
-        font-weight: 700;
-        border-radius: 8px;
-        margin: 0.5rem; /* Tetap ada margin di sekitar tombol individu jika diperlukan */
-        border: 2px solid;
+      .action-section {
+        background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+        border: 3px solid var(--vintage-gold);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
         position: relative;
-        overflow: hidden;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 8px rgba(44, 24, 16, 0.2);
+        box-shadow: var(--vintage-shadow);
       }
 
-      .btn-custom::before {
+      .action-section::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255, 255, 255, 0.2),
-          transparent
-        );
-        transition: left 0.5s ease;
-      }
-
-      .btn-custom:hover::before {
-        left: 100%;
-      }
-
-      .btn-primary.btn-custom {
-        background: linear-gradient(
-          135deg,
-          var(--vintage-brown),
-          var(--vintage-red)
-        );
-        border-color: var(--vintage-gold);
-        color: var(--vintage-cream);
-      }
-
-      .btn-primary.btn-custom:hover {
-        background: linear-gradient(
-          135deg,
-          var(--vintage-red),
-          var(--vintage-brown)
-        );
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
-      }
-
-      .btn-success.btn-custom {
-        background: linear-gradient(135deg, var(--vintage-gold), #b8860b);
-        border-color: var(--vintage-brown);
-        color: var(--vintage-dark);
-      }
-
-      .btn-success.btn-custom:hover {
-        background: linear-gradient(135deg, #b8860b, var(--vintage-gold));
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
-      }
-
-      .btn-outline-success {
-        /* Ini untuk tombol "Process Image" */
-        border-color: var(--vintage-brown);
-        color: var(--vintage-brown);
-        font-family: "Crimson Text", serif;
-        font-weight: 600;
-        border-radius: 6px;
-        padding: 0.5rem 1.5rem;
-        transition: all 0.3s ease;
-        background: var(--parchment);
-      }
-
-      .btn-outline-success:hover {
-        background: var(--vintage-brown);
-        border-color: var(--vintage-brown);
-        color: var(--vintage-cream);
-        box-shadow: 0 4px 8px rgba(44, 24, 16, 0.2);
-      }
-
-      .card {
-        background: linear-gradient(
-          135deg,
-          var(--parchment),
-          var(--vintage-cream)
-        );
-        border: 2px solid var(--vintage-gold);
-        border-radius: 12px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 8px 20px rgba(44, 24, 16, 0.15),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      }
-
-      /* Vintage corner decorations */
-      .card::before {
-        content: "";
-        position: absolute;
-        top: 5px;
-        left: 5px;
-        right: 5px;
-        bottom: 5px;
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        border-radius: 8px;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        border-radius: 15px;
         pointer-events: none;
       }
 
-      .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 30px rgba(44, 24, 16, 0.25),
-          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      .action-card {
+        background: rgba(255, 255, 255, 0.6);
+        border: 2px solid var(--vintage-gold);
+        border-radius: 15px;
+        padding: 2.5rem 2rem;
+        height: 100%;
+        transition: all 0.4s ease;
+        position: relative;
+        backdrop-filter: blur(5px);
+      }
+
+      .action-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(44, 24, 16, 0.3);
         border-color: var(--vintage-brown);
       }
 
-      .card-body {
+      .action-icon {
+        font-size: 4rem;
+        color: var(--vintage-brown);
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+        position: relative;
+      }
+
+      .action-icon::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.15), transparent);
+        border-radius: 50%;
+        z-index: -1;
+      }
+
+      .feature-grid {
+        margin-top: 4rem;
+      }
+
+      .feature-card {
+        background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+        border: 2px solid var(--vintage-gold);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(44, 24, 16, 0.15);
+        height: 100%;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 10px;
+        pointer-events: none;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(44, 24, 16, 0.25);
+        border-color: var(--vintage-brown);
+      }
+
+      .feature-card .card-body {
         position: relative;
         z-index: 2;
         padding: 2.5rem 2rem;
@@ -270,69 +257,60 @@
         font-size: 3.5rem;
         margin-bottom: 1.5rem;
         color: var(--vintage-brown);
-        text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.3);
-        position: relative;
+        text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
       }
 
-      .feature-icon::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 80px;
-        height: 80px;
-        background: radial-gradient(
-          circle,
-          rgba(212, 175, 55, 0.1),
-          transparent
-        );
-        border-radius: 50%;
-        z-index: -1;
-      }
-
-      .card h3 {
+      .feature-card h3 {
         font-family: "Playfair Display", serif;
         font-weight: 700;
         color: var(--vintage-dark);
         margin-bottom: 1rem;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.2);
       }
 
-      .card p {
+      .feature-card p {
         color: rgba(44, 24, 16, 0.8);
-        line-height: 1.7;
-        font-size: 1rem;
+        line-height: 1.8;
+        font-size: 1.1rem;
       }
 
-      /* Vintage decorative elements */
-      .row.decorative-separator-1::before {
-        /* Menggunakan kelas khusus untuk targeting */
+      /* File upload styling */
+      .file-upload-container {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+
+      .file-upload-label {
+        display: block;
+        width: 100%;
+        cursor: pointer;
+      }
+
+      .upload-preview {
+        background: rgba(212, 175, 55, 0.1);
+        border: 2px dashed var(--vintage-gold);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+        color: var(--vintage-brown);
+        font-style: italic;
+      }
+
+      /* Decorative separator */
+      .decorative-separator {
+        text-align: center;
+        margin: 3rem 0;
+      }
+
+      .decorative-separator::before {
         content: "◆ ◇ ◆";
-        display: block;
-        text-align: center;
+        display: inline-block;
+        font-size: 2rem;
         color: var(--vintage-gold);
-        font-size: 1.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         letter-spacing: 1rem;
-      }
-
-      .row.decorative-separator-2::before {
-        /* Kelas baru untuk separator fitur */
-        content: "❦ ❦ ❦";
-        display: block;
-        text-align: center;
-        color: var(--vintage-gold);
-        font-size: 1.8rem;
-        margin-bottom: 2rem;
-        letter-spacing: 2rem;
-      }
-
-      /* File input styling */
-      .file-upload-group {
-        /* Kelas baru untuk mengatur gap pada flex container */
-        gap: 0.8rem;
       }
 
       /* Alert styling */
@@ -362,168 +340,138 @@
       /* Responsive adjustments */
       @media (max-width: 768px) {
         .hero-section h1 {
-          font-size: 2.8rem;
-        }
-
-        .btn-custom {
-          padding: 0.8rem 1.8rem;
-          font-size: 1rem;
-        }
-
-        .feature-icon {
           font-size: 3rem;
         }
-      }
-
-      /* Vintage paper aging effect */
-      .vintage-aging {
-        position: relative;
-      }
-
-      .vintage-aging::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(
-            circle at 20% 80%,
-            rgba(139, 69, 19, 0.05) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 80% 20%,
-            rgba(139, 69, 19, 0.05) 0%,
-            transparent 50%
-          );
-        pointer-events: none;
-        border-radius: inherit;
+        
+        .action-card {
+          margin-bottom: 2rem;
+        }
+        
+        .feature-icon, .action-icon {
+          font-size: 3rem;
+        }
       }
     </style>
   </head>
   <body>
     <div class="container py-5">
+      <!-- Hero Section -->
       <div class="hero-section text-center vintage-aging">
-        <h1 class="display-4">Image Enhancement</h1>
-        <p class="lead">
-          Capture, enhance, and analyze your images
-        </p>
-      </div>
-      <div class="row justify-content-center decorative-separator-1">
-        <div class="col-12">
-        </div>
+        <h1 class="display-3">Image Enhancement</h1>
+        <p class="lead">Transform your memories into timeless masterpieces</p>
       </div>
 
-      <div class="row text-center mb-5 align-items-start">
-        <div class="col-md-6 mb-4 mb-md-0">
-          <a
-            href="{{ url_for('capture_page') }}"
-            class="btn btn-primary btn-custom d-block d-md-inline-block"
-          >
-            <i class="fas fa-camera"></i> Take Photo
-          </a>
-          <p class="mt-2">Use your camera with hi-five gesture detection</p>
-        </div>
-        <div class="col-md-6">
-          <form
-            action="{{ url_for('upload_file') }}"
-            method="POST"
-            enctype="multipart/form-data"
-          >
-            <div
-              class="d-flex flex-column align-items-center file-upload-group"
-            >
-              <input
-                type="file"
-                name="file"
-                id="fileInput"
-                class="d-none"
-                accept="image/*"
-                required
-              />
-              <label for="fileInput" class="btn btn-success btn-custom w-auto">
-                <i class="fas fa-upload"></i> Upload Image
-              </label>
-              <button type="submit" class="btn btn-outline-success btn-sm">
-                Process Image
-              </button>
-            </div>
-          </form>
-          <p class="mt-2">Upload an existing image for enhancement</p>
-        </div>
-      </div>
-      <div class="row justify-content-center decorative-separator-2">
-        <div class="col-12">
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-lg-4 col-md-4 mb-4">
-          <div class="card h-100 vintage-aging">
-            <div class="card-body text-center">
-              <div class="feature-icon">
-                <i class="fas fa-magic"></i>
+      <!-- Action Section -->
+      <div class="action-section vintage-aging">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="action-card text-center">
+              <div class="action-icon">
+                <i class="fas fa-camera-retro"></i>
               </div>
-              <h3>Image Enhancement</h3>
-              <p>
-                Adjust brightness, contrast, saturation, sharpness, and reduce
-                noise for perfect photos.
-              </p>
+              <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--vintage-dark);">Capture Moment</h3>
+              <p class="mb-4" style="color: rgba(44, 24, 16, 0.8);">Use gesture detection to capture the perfect shot with a simple hi-five</p>
+              <a href="{{ url_for('capture_page') }}" class="btn btn-vintage btn-vintage-primary">
+                <i class="fas fa-hand-paper me-2"></i>Start Capturing
+              </a>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="action-card text-center">
+              <div class="action-icon">
+                <i class="fas fa-palette"></i>
+              </div>
+              <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--vintage-dark);">Enhance Image</h3>
+              <p class="mb-3" style="color: rgba(44, 24, 16, 0.8);">Upload and enhance your photos with professional-grade tools</p>
+              
+              <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" class="mb-0">
+                <div class="file-upload-container">
+                  <input type="file" name="file" id="fileInput" class="d-none" accept="image/*" required />
+                  <label for="fileInput" class="btn btn-vintage btn-vintage-secondary file-upload-label">
+                    <i class="fas fa-upload me-2"></i>Choose Image
+                  </label>
+                  <div class="upload-preview d-none" id="uploadPreview">
+                    <small>Click "Process Image" to continue</small>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-vintage btn-vintage-primary">
+                  <i class="fas fa-magic me-2"></i>Process Image
+                </button>
+              </form>
             </div>
           </div>
         </div>
-        <div class="col-lg-4 col-md-4 mb-4">
-          <div class="card h-100 vintage-aging">
-            <div class="card-body text-center">
-              <div class="feature-icon">
-                <i class="fas fa-hand-paper"></i>
+      </div>
+
+      <!-- Decorative Separator -->
+      <div class="decorative-separator"></div>
+
+      <!-- Features Section -->
+      <div class="feature-grid">
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-adjust"></i>
+                </div>
+                <h3>Professional Enhancement</h3>
+                <p>Fine-tune brightness, contrast, saturation, and sharpness with precision controls for stunning results.</p>
               </div>
-              <h3>Gesture Detection</h3>
-              <p>
-                Automatic photo capture when hi-five gesture is detected with
-                5-second countdown.
-              </p>
             </div>
           </div>
-        </div>
-        <div class="col-lg-4 col-md-4 mb-4">
-          <div class="card h-100 vintage-aging">
-            <div class="card-body text-center">
-              <div class="feature-icon">
-                <i class="fas fa-chart-bar"></i>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-hand-sparkles"></i>
+                </div>
+                <h3>Smart Gesture Control</h3>
+                <p>Capture photos hands-free with advanced AI gesture recognition and automatic countdown timer.</p>
               </div>
-              <h3>Feature Extraction</h3>
-              <p>
-                Analyze image features including color histograms, edge
-                detection, and statistics.
-              </p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-eye-dropper"></i>
+                </div>
+                <h3>Color Mastery</h3>
+                <p>Advanced color mixing tools to adjust individual color ranges with hue, saturation, and luminance controls.</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %}
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
       {% for category, message in messages %}
-      <div
-        class="alert alert-{{ category }} alert-dismissible fade show"
-        role="alert"
-      >
+      <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
         {{ message }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-          aria-label="Close"
-        ></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
       {% endfor %}
     </div>
-    {% endif %} {% endwith %}
+    {% endif %}
+    {% endwith %}
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // File preview functionality
+      document.getElementById('fileInput').addEventListener('change', function(e) {
+        const preview = document.getElementById('uploadPreview');
+        if (e.target.files.length > 0) {
+          preview.textContent = `Selected: ${e.target.files[0].name}`;
+          preview.classList.remove('d-none');
+        } else {
+          preview.classList.add('d-none');
+        }
+      });
+    </script>
   </body>
 </html>

@@ -1,176 +1,143 @@
 /* flask/static/css/global_vintage.css */
 
 :root {
-    --vintage-cream: #f4f1e8;
-    --vintage-brown: #8b4513;
-    --vintage-gold: #d4af37;
-    --vintage-dark: #2c1810;
-    --vintage-red: #a0522d;
-    --parchment: #f7f3e9;
-    --sepia: rgba(139, 69, 19, 0.1);
+  --vintage-cream: #f4f1e8;
+  --vintage-brown: #8b4513;
+  --vintage-gold: #d4af37;
+  --vintage-dark: #2c1810;
+  --vintage-red: #a0522d;
+  --parchment: #f7f3e9;
+  --sepia: rgba(139, 69, 19, 0.1);
+  --vintage-shadow: 0 15px 35px rgba(44, 24, 16, 0.3);
 }
 
 body {
-    background: linear-gradient(135deg, var(--vintage-cream) 0%, #e8dcc0 50%, #d4c5a0 100%);
-    font-family: 'Crimson Text', serif;
-    color: var(--vintage-dark);
-    position: relative;
-    min-height: 100vh; /* Pastikan konten memenuhi tinggi viewport */
+  background: linear-gradient(135deg, #f4f1e8 0%, #e8dcc0 50%, #d4c5a0 100%);
+  font-family: "Crimson Text", serif;
+  color: var(--vintage-dark);
+  position: relative;
+  min-height: 100vh;
 }
 
 /* Vintage paper texture overlay */
 body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.02) 0%, transparent 50%),
-        radial-gradient(circle at 75% 75%, rgba(139, 69, 19, 0.02) 0%, transparent 50%),
-        radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.01) 0%, transparent 50%);
-    background-size: 200px 200px, 150px 150px, 100px 100px;
-    pointer-events: none;
-    z-index: 1; /* Pastikan overlay di bawah konten utama */
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(139, 69, 19, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(139, 69, 19, 0.02) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(212, 175, 55, 0.01) 0%, transparent 50%);
+  background-size: 200px 200px, 150px 150px, 100px 100px;
+  pointer-events: none;
+  z-index: 1;
 }
 
-/* Generic vintage aging effect - can be applied to cards/containers */
+.container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Vintage aging effect */
 .vintage-aging {
-    position: relative;
+  position: relative;
 }
 
 .vintage-aging::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: 
-        radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
-    pointer-events: none;
-    border-radius: inherit;
-    z-index: 0; /* Pastikan di bawah konten utama div */
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(139, 69, 19, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 69, 19, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
-/* Common button styles */
+/* Vintage buttons */
 .btn-vintage {
-    font-family: 'Playfair Display', serif;
-    font-weight: 700;
-    border-radius: 8px;
-    padding: 1rem 2.5rem;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border: 2px solid;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 8px rgba(44, 24, 16, 0.2);
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  border-radius: 8px;
+  margin: 0.5rem;
+  border: 2px solid;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(44, 24, 16, 0.2);
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-vintage::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s ease;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
 }
 
 .btn-vintage:hover::before {
-    left: 100%;
+  left: 100%;
 }
 
 .btn-vintage-primary {
-    background: linear-gradient(135deg, var(--vintage-brown), var(--vintage-red));
-    border-color: var(--vintage-gold);
-    color: var(--vintage-cream);
+  background: linear-gradient(135deg, var(--vintage-brown), var(--vintage-red));
+  border-color: var(--vintage-gold);
+  color: var(--vintage-cream);
 }
 
 .btn-vintage-primary:hover {
-    background: linear-gradient(135deg, var(--vintage-red), var(--vintage-brown));
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
+  background: linear-gradient(135deg, var(--vintage-red), var(--vintage-brown));
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
+  color: var(--vintage-cream);
 }
 
 .btn-vintage-secondary {
-    background: var(--parchment);
-    border-color: var(--vintage-brown);
-    color: var(--vintage-brown);
+  background: var(--parchment);
+  border-color: var(--vintage-brown);
+  color: var(--vintage-brown);
 }
 
 .btn-vintage-secondary:hover {
-    background: var(--vintage-brown);
-    border-color: var(--vintage-brown);
-    color: var(--vintage-cream);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
+  background: var(--vintage-brown);
+  border-color: var(--vintage-brown);
+  color: var(--vintage-cream);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(44, 24, 16, 0.3);
 }
 
-/* Alert styling (from index.html) */
-.alert {
-    border-radius: 8px;
-    border: 2px solid;
-    font-family: 'Crimson Text', serif;
-    font-weight: 600;
+/* Decorative separators */
+.decorative-separator {
+  text-align: center;
+  color: var(--vintage-gold);
+  font-size: 1.8rem;
+  margin: 3rem 0;
+  letter-spacing: 2rem;
 }
 
-.alert-success {
-    background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
-    border-color: var(--vintage-gold);
-    color: var(--vintage-brown);
+.decorative-separator::before {
+  content: "❦ ❦ ❦";
 }
 
-.alert-danger {
-    background: linear-gradient(135deg, #f4f1e8, #edd5d5);
-    border-color: var(--vintage-red);
-    color: var(--vintage-red);
-}
-
-/* General container styling */
-.container {
-    position: relative;
-    z-index: 2; /* Ensure content is above body::before */
-}
-
-h2 {
-    font-family: 'Playfair Display', serif;
-    font-weight: 900;
-    color: var(--vintage-dark);
-    text-shadow: 2px 2px 0px rgba(44, 24, 16, 0.2);
-}
-
-p.lead {
-    font-size: 1.4rem;
-    font-style: italic;
-    color: rgba(44, 24, 16, 0.8);
-    text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.1);
-}
-
-/* Decorative Separators (if reused) */
-.decorative-separator-1::before {
-    content: '◆ ◇ ◆';
-    display: block;
-    text-align: center;
-    color: var(--vintage-gold);
-    font-size: 1.5rem;
-    margin-bottom: 2rem;
-    letter-spacing: 1rem;
-}
-
-.decorative-separator-2::before {
-    content: '❦ ❦ ❦';
-    display: block;
-    text-align: center;
-    color: var(--vintage-gold);
-    font-size: 1.8rem;
-    margin-bottom: 2rem;
-    letter-spacing: 2rem;
+.decorative-separator.diamonds::before {
+  content: "◆ ◇ ◆";
+  letter-spacing: 1rem;
+  font-size: 1.5rem;
 }
 
 /* Responsive adjustments for fonts and padding */

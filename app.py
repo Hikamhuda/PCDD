@@ -4,7 +4,7 @@ import time
 import numpy as np
 from flask import Flask, render_template, request, redirect, url_for, flash, Response
 from werkzeug.utils import secure_filename
-from PIL import Image, ImageEnhance, ImageFilter
+from PIL import Image
 import mediapipe as mp
 from datetime import datetime
 from io import BytesIO
@@ -26,6 +26,9 @@ hands = mp_hands.Hands(
     min_tracking_confidence=0.5
 )
 mp_drawing = mp.solutions.drawing_utils
+
+# Tambahkan path ke haarcascade
+HAARCASCADE_PATH = os.path.join(os.path.dirname(__file__), 'haarcascade_frontalface_default.xml')
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -78,29 +81,92 @@ def extract_features(image_path):
             print(f"Warning: Could not read image at {image_path} for feature extraction.")
             return None
         
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        mean_val = np.mean(img); std_val = np.std(img)
-        edges = cv2.Canny(gray, 100, 200)
-        edge_pixels = np.sum(edges > 0)
-        total_pixels = edges.shape[0] * edges.shape[1]
+        # Manual grayscale conversion
+        gray = np.dot(img[...,:3], [0.299, 0.587, 0.114]).astype(np.uint8)
+        # Manual mean (brightness)
+        mean_val = np.mean(gray)
+        # Manual std (contrast)
+        std_val = np.std(gray)
+        # Manual edge detection (Sobel)
+        sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+        sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        sobel_mag = np.sqrt(sobelx**2 + sobely**2)
+        edge_pixels = np.sum(sobel_mag > 100)  # threshold empiris
+        total_pixels = gray.shape[0] * gray.shape[1]
         edge_ratio = edge_pixels / total_pixels if total_pixels > 0 else 0
-        hist_b = cv2.calcHist([img], [0], None, [256], [0, 256])
-        hist_g = cv2.calcHist([img], [1], None, [256], [0, 256])
-        hist_r = cv2.calcHist([img], [2], None, [256], [0, 256])
-        return {'mean': float(mean_val), 'std_dev': float(std_val), 'edge_ratio': float(edge_ratio),
-                'histogram': {'blue': hist_b.flatten().tolist(), 'green': hist_g.flatten().tolist(), 'red': hist_r.flatten().tolist()}}
+        # Manual histogram for each channel
+        hist_b = np.histogram(img[:,:,0], bins=256, range=(0,256))[0]
+        hist_g = np.histogram(img[:,:,1], bins=256, range=(0,256))[0]
+        hist_r = np.histogram(img[:,:,2], bins=256, range=(0,256))[0]
+        # Face detection tetap dengan Haar Cascade
+        face_cascade = cv2.CascadeClassifier(HAARCASCADE_PATH)
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        face_count = len(faces)
+
+        return {
+            'mean': float(mean_val),
+            'std_dev': float(std_val),
+            'edge_ratio': float(edge_ratio),
+            'histogram': {
+                'blue': hist_b.tolist(),
+                'green': hist_g.tolist(),
+                'red': hist_r.tolist()
+            },
+            'face_count': face_count
+        }
     except Exception as e:
         print(f"Error extracting features from {image_path}: {e}")
         return None
 
-def _apply_hsl_adjustments_to_pil_image(img_pil, params):
-    hsv_img = img_pil.convert('HSV')
-    hsv_np = np.array(hsv_img, dtype=np.float32)
-    h_channel, s_channel, v_channel = hsv_np[:,:,0], hsv_np[:,:,1], hsv_np[:,:,2]
+def _opencv_adjust_brightness_contrast(img, brightness=1.0, contrast=1.0):
+    # brightness: 1.0 = no change, contrast: 1.0 = no change
+    img = img.astype(np.float32)
+    img = img * contrast
+    img = img + (brightness - 1.0) * 128
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    return img
 
-    S_THRESH = params.get('s_thresh', 85) 
-    V_THRESH = params.get('v_thresh', 65) 
+def _opencv_adjust_saturation(img, saturation=1.0):
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV).astype(np.float32)
+    img_hsv[...,1] *= saturation
+    img_hsv[...,1] = np.clip(img_hsv[...,1], 0, 255)
+    img_hsv = img_hsv.astype(np.uint8)
+    return cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
 
+def _opencv_adjust_sharpness(img, sharpness=1.0):
+    if sharpness == 1.0:
+        return img
+    blur = cv2.GaussianBlur(img, (0,0), 3)
+    return cv2.addWeighted(img, sharpness, blur, 1-sharpness, 0)
+
+def _opencv_noise_reduction(img, noise_reduction=0):
+    if noise_reduction <= 0:
+        return img
+    return cv2.GaussianBlur(img, (0,0), noise_reduction)
+
+def _opencv_white_balance(img, wb_temp_param=0.0):
+    if wb_temp_param == 0.0:
+        return img
+    img = img.astype(np.float32)
+    r, g, b = img[:,:,0], img[:,:,1], img[:,:,2]
+    adjustment_strength = 0.3
+    if wb_temp_param > 0:
+        r += wb_temp_param * adjustment_strength
+        b -= wb_temp_param * adjustment_strength * 0.7
+    elif wb_temp_param < 0:
+        r += wb_temp_param * adjustment_strength * 0.7
+        b -= wb_temp_param * adjustment_strength
+    img[:,:,0] = np.clip(r, 0, 255)
+    img[:,:,1] = np.clip(g, 0, 255)
+    img[:,:,2] = np.clip(b, 0, 255)
+    return img.astype(np.uint8)
+
+def _opencv_hsl_adjust(img, params):
+    # Only basic per-color hue/sat/light adjustment, similar to PIL version
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV).astype(np.float32)
+    h, s, v = img_hsv[:,:,0], img_hsv[:,:,1], img_hsv[:,:,2]
+    S_THRESH = params.get('s_thresh', 85)
+    V_THRESH = params.get('v_thresh', 65)
     color_ranges = {
         "r": ([0, S_THRESH, V_THRESH], [10, 255, 255], [245, S_THRESH, V_THRESH], [255, 255, 255]),
         "o": ([11, S_THRESH, V_THRESH], [28, 255, 255]),
@@ -111,109 +177,62 @@ def _apply_hsl_adjustments_to_pil_image(img_pil, params):
         "p": ([189, S_THRESH, V_THRESH], [220, 255, 255]),
         "m": ([221, S_THRESH, V_THRESH], [244, 255, 255])
     }
-
     for color_key_short in ["r", "o", "y", "g", "a", "b", "p", "m"]:
         hue_delta = params.get(f'hue_{color_key_short}_delta', 0)
         sat_factor = params.get(f'sat_{color_key_short}_factor', 1.0)
         light_factor = params.get(f'light_{color_key_short}_factor', 1.0)
-
         if not (hue_delta == 0 and sat_factor == 1.0 and light_factor == 1.0):
             ranges_for_color = color_ranges[color_key_short]
-            current_mask = np.zeros_like(h_channel, dtype=bool)
-
-            if color_key_short == "r": 
+            current_mask = np.zeros_like(h, dtype=np.uint8)
+            if color_key_short == "r":
                 lr1, ur1, lr2, ur2 = ranges_for_color
-                mask1 = (h_channel >= lr1[0]) & (h_channel <= ur1[0]) & \
-                        (s_channel >= lr1[1]) & (s_channel <= ur1[1]) & \
-                        (v_channel >= lr1[2]) & (v_channel <= ur1[2])
-                mask2 = (h_channel >= lr2[0]) & (h_channel <= ur2[0]) & \
-                        (s_channel >= lr2[1]) & (s_channel <= ur2[1]) & \
-                        (v_channel >= lr2[2]) & (v_channel <= ur2[2])
-                current_mask = mask1 | mask2
+                mask1 = ((h >= lr1[0]) & (h <= ur1[0]) & (s >= lr1[1]) & (s <= ur1[1]) & (v >= lr1[2]) & (v <= ur1[2]))
+                mask2 = ((h >= lr2[0]) & (h <= ur2[0]) & (s >= lr2[1]) & (s <= ur2[1]) & (v >= lr2[2]) & (v <= ur2[2]))
+                current_mask = (mask1 | mask2).astype(np.uint8)
             else:
                 lr, ur = ranges_for_color
-                current_mask = (h_channel >= lr[0]) & (h_channel <= ur[0]) & \
-                               (s_channel >= lr[1]) & (s_channel <= ur[1]) & \
-                               (v_channel >= lr[2]) & (v_channel <= ur[2])
-
+                current_mask = ((h >= lr[0]) & (h <= ur[0]) & (s >= lr[1]) & (s <= ur[1]) & (v >= lr[2]) & (v <= ur[2])).astype(np.uint8)
+            # Feather mask for smooth transition
             if np.any(current_mask):
-                hue_adjustment_value_pil = (hue_delta / 360.0) * 255.0
-                h_channel[current_mask] = (h_channel[current_mask] + hue_adjustment_value_pil) % 256
-                s_channel[current_mask] = np.clip(s_channel[current_mask] * sat_factor, 0, 255)
-                v_channel[current_mask] = np.clip(v_channel[current_mask] * light_factor, 0, 255)
-
-    hsv_np[:,:,0] = h_channel
-    hsv_np[:,:,1] = s_channel
-    hsv_np[:,:,2] = v_channel
-    
-    adjusted_hsv_img = Image.fromarray(hsv_np.astype(np.uint8), 'HSV')
-    return adjusted_hsv_img.convert("RGB")
-
-def _apply_white_balance(img_pil, wb_temp_param):
-    """Applies white balance adjustment to a PIL image."""
-    if wb_temp_param == 0.0: # No change needed
-        return img_pil
-
-    img_np = np.array(img_pil, dtype=np.float32) # Use float for calculations
-    r_channel, g_channel, b_channel = img_np[:,:,0], img_np[:,:,1], img_np[:,:,2]
-
-    # Define how much the temperature slider affects the channels.
-    # wb_temp_param is expected to be from -100 (cool) to 100 (warm).
-    # adjustment_strength scales this effect. Tune this for sensitivity.
-    adjustment_strength = 0.3 # Max change of 30 units if slider is at 100 or -100
-
-    if wb_temp_param > 0: # Warmer: Increase Red, Decrease Blue
-        r_channel += wb_temp_param * adjustment_strength
-        b_channel -= wb_temp_param * adjustment_strength * 0.7 # Blue reduction factor
-    elif wb_temp_param < 0: # Cooler: Decrease Red, Increase Blue
-        # wb_temp_param is negative here
-        r_channel += wb_temp_param * adjustment_strength * 0.7 # Red reduction factor (less aggressive)
-        b_channel -= wb_temp_param * adjustment_strength # Effective addition due to double negative
-
-    img_np[:,:,0] = np.clip(r_channel, 0, 255)
-    # Green channel is typically not directly adjusted for simple warm/cool,
-    # but more complex WB might affect it.
-    img_np[:,:,1] = np.clip(g_channel, 0, 255) 
-    img_np[:,:,2] = np.clip(b_channel, 0, 255)
-
-    return Image.fromarray(img_np.astype(np.uint8), 'RGB')
-
+                feathered_mask = cv2.GaussianBlur(current_mask.astype(np.float32), (11,11), 0)
+                feathered_mask = feathered_mask / feathered_mask.max() if feathered_mask.max() > 0 else feathered_mask
+                hue_adjustment_value_cv = (hue_delta / 360.0) * 180.0
+                # Apply adjustment with feathered mask
+                h = (h + hue_adjustment_value_cv * feathered_mask) % 180
+                s = s * (1 + (sat_factor - 1.0) * feathered_mask)
+                v = v * (1 + (light_factor - 1.0) * feathered_mask)
+                s = np.clip(s, 0, 255)
+                v = np.clip(v, 0, 255)
+    img_hsv[:,:,0], img_hsv[:,:,1], img_hsv[:,:,2] = h, s, v
+    img_hsv = img_hsv.astype(np.uint8)
+    return cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
 
 def adjust_image(image_path, params):
     try:
-        img_pil = Image.open(image_path).convert("RGB")
-        
+        img = cv2.imread(image_path)
+        if img is None:
+            print(f"Error: Could not read image {image_path}")
+            return None
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # 1. General Adjustments
-        if params.get('brightness', 1.0) != 1.0:
-            img_pil = ImageEnhance.Brightness(img_pil).enhance(params['brightness'])
-        if params.get('contrast', 1.0) != 1.0:
-            img_pil = ImageEnhance.Contrast(img_pil).enhance(params['contrast'])
-        if params.get('saturation', 1.0) != 1.0: # Global saturation
-            img_pil = ImageEnhance.Color(img_pil).enhance(params['saturation'])
-        if params.get('sharpness', 1.0) != 1.0:
-            img_pil = ImageEnhance.Sharpness(img_pil).enhance(params['sharpness'])
-        if params.get('noise_reduction', 0) > 0:
-            img_pil = img_pil.filter(ImageFilter.GaussianBlur(radius=params['noise_reduction']))
-
-        # 2. White Balance Adjustment
-        white_balance_temp = params.get('white_balance_temp', 0.0)
-        if white_balance_temp != 0.0:
-            img_pil = _apply_white_balance(img_pil, white_balance_temp)
-
-        # 3. HSL Adjustments (per color)
-        img_pil = _apply_hsl_adjustments_to_pil_image(img_pil, params)
-        
+        img = _opencv_adjust_brightness_contrast(img, params.get('brightness', 1.0), params.get('contrast', 1.0))
+        img = _opencv_adjust_saturation(img, params.get('saturation', 1.0))
+        img = _opencv_adjust_sharpness(img, params.get('sharpness', 1.0))
+        img = _opencv_noise_reduction(img, int(params.get('noise_reduction', 0)))
+        # 2. White Balance
+        img = _opencv_white_balance(img, params.get('white_balance_temp', 0.0))
+        # 3. HSL Adjustments
+        img = _opencv_hsl_adjust(img, params)
+        img_pil = Image.fromarray(img)
         base_name = os.path.basename(image_path)
         name_part, ext_part = os.path.splitext(base_name)
         if name_part.startswith("processed_"):
             name_part = name_part[len("processed_"):]
             if len(name_part) > 15 and name_part[8] == '_' and name_part[:8].isdigit() and name_part[9:15].isdigit():
                 name_part = name_part[16:]
-
         processed_filename = f"processed_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{name_part}{ext_part}"
         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
         img_pil.save(processed_path)
-        
         return processed_filename
     except Exception as e:
         print(f"Error adjusting image {image_path}: {e}")
@@ -302,38 +321,25 @@ def realtime_adjust():
     file = request.files['file']
     if file.filename == '':
         return {'error': 'File tidak dipilih'}, 400
-    
     try:
         params = _parse_adjustment_params_from_form(request.form)
         img_pil = Image.open(file.stream).convert("RGB")
-
+        img = np.array(img_pil)
         # 1. General Adjustments
-        if params.get('brightness', 1.0) != 1.0:
-            img_pil = ImageEnhance.Brightness(img_pil).enhance(params['brightness'])
-        if params.get('contrast', 1.0) != 1.0:
-            img_pil = ImageEnhance.Contrast(img_pil).enhance(params['contrast'])
-        if params.get('saturation', 1.0) != 1.0: 
-            img_pil = ImageEnhance.Color(img_pil).enhance(params['saturation'])
-        if params.get('sharpness', 1.0) != 1.0:
-            img_pil = ImageEnhance.Sharpness(img_pil).enhance(params['sharpness'])
-        if params.get('noise_reduction', 0) > 0:
-            img_pil = img_pil.filter(ImageFilter.GaussianBlur(radius=params['noise_reduction']))
-        
-        # 2. White Balance Adjustment
-        white_balance_temp = params.get('white_balance_temp', 0.0)
-        if white_balance_temp != 0.0:
-             img_pil = _apply_white_balance(img_pil, white_balance_temp)
-        
-        # 3. HSL Adjustments per color
-        img_pil = _apply_hsl_adjustments_to_pil_image(img_pil, params)
-        
+        img = _opencv_adjust_brightness_contrast(img, params.get('brightness', 1.0), params.get('contrast', 1.0))
+        img = _opencv_adjust_saturation(img, params.get('saturation', 1.0))
+        img = _opencv_adjust_sharpness(img, params.get('sharpness', 1.0))
+        img = _opencv_noise_reduction(img, int(params.get('noise_reduction', 0)))
+        # 2. White Balance
+        img = _opencv_white_balance(img, params.get('white_balance_temp', 0.0))
+        # 3. HSL Adjustments
+        img = _opencv_hsl_adjust(img, params)
+        img_pil = Image.fromarray(img)
         buffer = BytesIO()
-        img_pil.save(buffer, format="JPEG") 
+        img_pil.save(buffer, format="JPEG")
         buffer.seek(0)
-        
         img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         return {'image': img_base64}
-
     except Exception as e:
         print(f"Error in realtime_adjust: {e}")
         traceback.print_exc()
@@ -402,9 +408,20 @@ def process_image(filename):
 @app.route('/result/<filename>')
 def result(filename):
     processed_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
-    if not os.path.exists(processed_path): flash('Gambar yang diproses tidak ditemukan.', 'error'); return redirect(url_for('index'))
+    if not os.path.exists(processed_path): 
+        flash('Processed image not found.', 'error')
+        return redirect(url_for('index'))
     features = extract_features(processed_path)
     return render_template('result.html', filename=filename, features=features if features else {})
+
+@app.route('/display/<filename>')
+def display(filename):
+    """Display processed image in a gallery view"""
+    processed_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+    if not os.path.exists(processed_path):
+        flash('Image not found.', 'error')
+        return redirect(url_for('index'))
+    return render_template('display.html', filename=filename)
 
 if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

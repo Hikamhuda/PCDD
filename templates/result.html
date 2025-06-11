@@ -35,102 +35,267 @@
             text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.2);
         }
 
-        .image-container {
-            max-width: 800px;
-            margin: 0 auto 2.5rem auto; /* Lebih banyak margin bawah */
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 15px 35px rgba(44, 24, 16, 0.3), inset 0 0 0 1px rgba(212, 175, 55, 0.5);
+        /* Hero section styling */
+        .result-hero {
+            background: linear-gradient(135deg, 
+                rgba(212, 175, 55, 0.9), 
+                rgba(160, 82, 45, 0.8), 
+                rgba(139, 69, 19, 0.7));
+            color: var(--vintage-cream);
+            padding: 2.5rem 2rem;
+            border-radius: 18px;
+            margin-bottom: 2.5rem;
             border: 3px solid var(--vintage-gold);
-            background-color: var(--parchment);
+            box-shadow: var(--vintage-shadow);
+            text-align: center;
             position: relative;
-            z-index: 2;
+            overflow: hidden;
         }
-        
-        .image-container::before {
-            content: '';
+
+        .result-hero::before {
+            content: "";
             position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            bottom: 10px;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
             border: 2px solid rgba(212, 175, 55, 0.3);
             border-radius: 12px;
             pointer-events: none;
         }
 
-        #processedImage {
-            width: 100%;
-            display: block;
-            border-radius: 10px; /* Cocokkan dengan inner border */
+        .result-hero::after {
+            content: "✧ ★ ✧";
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--vintage-gold);
+            font-size: 1.5rem;
+            letter-spacing: 1.5rem;
+            opacity: 0.7;
         }
 
-        .feature-card {
-            margin-bottom: 1.5rem;
-            border-radius: 12px; /* Radius lebih besar */
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--parchment), var(--vintage-cream)); /* Background vintage */
-            border: 2px solid var(--vintage-gold); /* Border vintage */
-            box-shadow: 0 8px 20px rgba(44, 24, 16, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        .result-hero h2 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 3.2rem;
+            text-shadow: 3px 3px 0px rgba(44, 24, 16, 0.4);
+            margin: 1rem 0 0.5rem 0;
             position: relative;
             z-index: 2;
         }
 
-        .feature-card::before {
-            content: '';
+        .result-hero p {
+            font-size: 1.3rem;
+            font-style: italic;
+            margin-bottom: 0;
+            position: relative;
+            z-index: 2;
+            opacity: 0.95;
+        }
+
+        /* Main content layout */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Image showcase */
+        .image-showcase {
+            background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+            border: 3px solid var(--vintage-gold);
+            border-radius: 18px;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: var(--vintage-shadow);
+        }
+
+        .image-showcase::before {
+            content: "";
             position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 8px;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            border-radius: 12px;
             pointer-events: none;
         }
 
-        .card-header {
-            background: linear-gradient(135deg, var(--vintage-brown), var(--vintage-red)) !important; /* Warna header vintage */
-            color: var(--vintage-cream) !important;
+        .image-container {
+            position: relative;
+            z-index: 2;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(44, 24, 16, 0.2);
+        }
+
+        #processedImage {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 12px;
+        }
+
+        /* Sidebar */
+        .result-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Quick actions card */
+        .quick-actions-card {
+            background: linear-gradient(135deg, var(--vintage-gold), #b8860b);
+            border: 2px solid var(--vintage-brown);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: var(--vintage-shadow);
+        }
+
+        .quick-actions-card h4 {
             font-family: 'Playfair Display', serif;
             font-weight: 700;
-            font-size: 1.3rem;
-            text-shadow: 1px 1px 2px rgba(44, 24, 16, 0.3);
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid rgba(212, 175, 55, 0.5);
-        }
-
-        .card-body {
             color: var(--vintage-dark);
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        /* Statistics card */
+        .stats-card {
+            background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+            border: 2px solid var(--vintage-gold);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--vintage-shadow);
+            position: relative;
+        }
+
+        .stats-card::before {
+            content: "";
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .stats-header {
+            background: linear-gradient(135deg, var(--vintage-brown), var(--vintage-red));
+            color: var(--vintage-cream);
+            padding: 1.2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stats-header h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.3rem;
+        }
+
+        .stats-body {
             padding: 1.5rem;
+            position: relative;
+            z-index: 2;
         }
 
-        .list-group-item {
-            background-color: transparent !important; /* Transparan agar terlihat background card */
-            border-color: rgba(139, 69, 19, 0.1) !important; /* Border item lebih halus */
-            font-size: 1.1rem;
-            color: rgba(44, 24, 16, 0.8);
-            font-weight: 500;
+        .stat-item {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+            font-size: 1rem;
+            color: var(--vintage-dark);
         }
 
-        .list-group-item span.badge {
-            background-color: var(--vintage-gold) !important; /* Badge warna emas */
-            color: var(--vintage-dark) !important;
-            font-family: 'Crimson Text', serif;
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
             font-weight: 600;
-            padding: 0.5em 0.8em;
-            font-size: 0.9rem;
+            flex: 1;
         }
 
-        /* Chart Styling */
+        .stat-value {
+            background: var(--vintage-gold);
+            color: var(--vintage-dark);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            min-width: 3rem;
+            text-align: center;
+        }
+
+        /* Chart section */
+        .chart-section {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+            border: 3px solid var(--vintage-gold);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: var(--vintage-shadow);
+            position: relative;
+        }
+
+        .chart-section::before {
+            content: "";
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .chart-header {
+            background: linear-gradient(135deg, #b88517, #966813);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .chart-header h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.4rem;
+        }
+
+        .chart-body {
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
         .chart-container {
             position: relative;
-            height: 350px; /* Sedikit lebih tinggi */
-            margin-bottom: 2.5rem;
-            padding: 1rem; /* Padding agar chart tidak terlalu mepet */
-        }
-        canvas#histogramChart {
-            background-color: var(--vintage-cream); /* Background chart */
-            border-radius: 8px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
             padding: 1rem;
         }
 
@@ -209,71 +374,123 @@
                 font-size: 1rem;
             }
         }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr 320px;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+            
+            .result-sidebar {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .result-hero h2 {
+                font-size: 2.5rem;
+            }
+            
+            .result-hero p {
+                font-size: 1.1rem;
+            }
+            
+            .result-sidebar {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+            
+            .btn-result {
+                padding: 0.7rem 1.5rem;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <div class="text-center mb-4 vintage-aging">
-            <h2>Processed Image</h2>
-            <p class="lead">Your enhanced image with feature analysis</p>
+    <div class="container py-4">
+        <!-- Hero Section -->
+        <div class="result-hero vintage-aging">
+            <h2>Image Enhanced Successfully</h2>
+            <p>Your masterpiece is ready with detailed analysis</p>
         </div>
 
-        <div class="image-container vintage-aging">
-            <img id="processedImage" src="{{ url_for('static', filename='processed/' + filename) }}" alt="Processed image">
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card feature-card vintage-aging">
-                    <div class="card-header bg-primary text-white">
-                        <h4>Basic Statistics</h4>
-                    </div>
-                    <div class="card-body">
-                        <ul class="list-group list-group-flush">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Mean Pixel Value
-                                <span class="badge bg-primary rounded-pill">{{ "%.2f"|format(features.mean) }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Standard Deviation
-                                <span class="badge bg-primary rounded-pill">{{ "%.2f"|format(features.std_dev) }}</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Edge Ratio
-                                <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(features.edge_ratio) }}</span>
-                            </li>
-                        </ul>
-                    </div>
+        <!-- Main Content Grid -->
+        <div class="content-grid">
+            <!-- Image Showcase -->
+            <div class="image-showcase vintage-aging">
+                <div class="image-container">
+                    <img id="processedImage" src="{{ url_for('static', filename='processed/' + filename) }}" alt="Enhanced image">
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <div class="card feature-card vintage-aging">
-                    <div class="card-header bg-success text-white">
-                        <h4>Image Actions</h4>
-                    </div>
-                    <div class="card-body text-center">
-                        <a href="{{ url_for('static', filename='processed/' + filename) }}" download class="btn btn-primary btn-lg mb-3">
-                            <i class="bi bi-download"></i> Download Image
+            <!-- Sidebar -->
+            <div class="result-sidebar">
+                <!-- Quick Actions -->
+                <div class="quick-actions-card vintage-aging">
+                    <h4><i class="bi bi-lightning-charge me-2"></i>Quick Actions</h4>
+                    <div class="action-buttons">
+                        <a href="{{ url_for('static', filename='processed/' + filename) }}" download class="btn-result btn-lg btn-primary d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-download"></i>
+                            <span>Download</span>
                         </a>
-                        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary btn-lg">
-                            <i class="bi bi-arrow-left"></i> Back to Home
+                        <a href="{{ url_for('edit', filename=filename) }}" class="btn-result btn-lg btn-warning d-flex align-items-center justify-content-center gap-2" style="color: var(--vintage-dark); border: 2px solid var(--vintage-gold); background: linear-gradient(135deg, #ffe082, #ffca28);">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Edit Again</span>
+                        </a>
+                        <a href="{{ url_for('index') }}" class="btn-result btn-lg btn-outline-secondary d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-house"></i>
+                            <span>New Image</span>
                         </a>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card feature-card vintage-aging">
-                    <div class="card-header bg-info text-white">
-                        <h4>Color Histograms</h4>
+                <!-- Statistics -->
+                <div class="stats-card vintage-aging">
+                    <div class="stats-header">
+                        <h4><i class="bi bi-graph-up me-2"></i>Image Analysis</h4>
                     </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="histogramChart"></canvas>
+                    <div class="stats-body">
+                        <div class="stat-item">
+                            <span class="stat-label">Brightness Level</span>
+                            <span class="stat-value">{{ "%.1f"|format(features.mean) }}</span>
                         </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Contrast Variance</span>
+                            <span class="stat-value">{{ "%.1f"|format(features.std_dev) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Edge Detail</span>
+                            <span class="stat-value">{{ "%.3f"|format(features.edge_ratio) }}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Detected Faces</span>
+                            <span class="stat-value">{{ features.face_count }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section vintage-aging">
+                <div class="chart-header">
+                    <h4><i class="bi bi-palette me-2"></i>Color Distribution Analysis</h4>
+                </div>
+                <div class="chart-body">
+                    <div class="chart-container">
+                        <canvas id="histogramChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -318,6 +535,10 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
                 scales: {
                     y: {
                         beginAtZero: true,
@@ -325,26 +546,48 @@
                             display: true,
                             text: 'Pixel Count',
                             color: 'var(--vintage-dark)',
-                            font: { family: 'Crimson Text', size: 14 }
+                            font: { family: 'Crimson Text', size: 13, weight: '600' }
                         },
-                        ticks: { color: 'rgba(44, 24, 16, 0.7)' }
+                        ticks: { 
+                            color: 'rgba(44, 24, 16, 0.7)',
+                            font: { size: 11 }
+                        },
+                        grid: {
+                            color: 'rgba(212, 175, 55, 0.2)'
+                        }
                     },
                     x: {
                         title: {
                             display: true,
                             text: 'Pixel Intensity (0-255)',
                             color: 'var(--vintage-dark)',
-                            font: { family: 'Crimson Text', size: 14 }
+                            font: { family: 'Crimson Text', size: 13, weight: '600' }
                         },
-                        ticks: { color: 'rgba(44, 24, 16, 0.7)' }
+                        ticks: { 
+                            color: 'rgba(44, 24, 16, 0.7)',
+                            font: { size: 11 }
+                        },
+                        grid: {
+                            color: 'rgba(212, 175, 55, 0.2)'
+                        }
                     }
                 },
                 plugins: {
                     legend: {
+                        position: 'top',
                         labels: {
                             color: 'var(--vintage-dark)',
-                            font: { family: 'Crimson Text', size: 12 }
+                            font: { family: 'Crimson Text', size: 12, weight: '600' },
+                            usePointStyle: true,
+                            padding: 20
                         }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(244, 241, 232, 0.95)',
+                        titleColor: 'var(--vintage-dark)',
+                        bodyColor: 'var(--vintage-brown)',
+                        borderColor: 'var(--vintage-gold)',
+                        borderWidth: 1
                     }
                 }
             }
