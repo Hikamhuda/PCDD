@@ -103,6 +103,19 @@ def extract_features(image_path):
         faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
         face_count = len(faces)
 
+        # Save face crops
+        face_crops = []
+        if face_count > 0:
+            faces_dir = os.path.join(app.config['PROCESSED_FOLDER'], 'faces')
+            os.makedirs(faces_dir, exist_ok=True)
+            base_name = os.path.splitext(os.path.basename(image_path))[0]
+            for idx, (x, y, w, h) in enumerate(faces):
+                face_img = img[y:y+h, x:x+w]
+                face_filename = f"{base_name}_face_{idx+1}.jpg"
+                face_path = os.path.join(faces_dir, face_filename)
+                cv2.imwrite(face_path, face_img)
+                face_crops.append(face_filename)
+
         return {
             'mean': float(mean_val),
             'std_dev': float(std_val),
@@ -112,7 +125,8 @@ def extract_features(image_path):
                 'green': hist_g.tolist(),
                 'red': hist_r.tolist()
             },
-            'face_count': face_count
+            'face_count': face_count,
+            'face_crops': face_crops
         }
     except Exception as e:
         print(f"Error extracting features from {image_path}: {e}")
@@ -412,7 +426,10 @@ def result(filename):
         flash('Processed image not found.', 'error')
         return redirect(url_for('index'))
     features = extract_features(processed_path)
-    return render_template('result.html', filename=filename, features=features if features else {})
+    face_crop_urls = []
+    if features and features.get('face_crops'):
+        face_crop_urls = [url_for('static', filename=f'processed/faces/{fname}') for fname in features['face_crops']]
+    return render_template('result.html', filename=filename, features=features if features else {}, face_crop_urls=face_crop_urls)
 
 @app.route('/display/<filename>')
 def display(filename):
