@@ -1,26 +1,477 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Photobooth</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
-<body>
-    <h1>Photobooth</h1>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vintage Photo Studio</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Crimson+Text:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global_vintage.css') }}" />
+    <style>
+      :root {
+        --vintage-cream: #f4f1e8;
+        --vintage-brown: #8b4513;
+        --vintage-gold: #d4af37;
+        --vintage-dark: #2c1810;
+        --vintage-red: #a0522d;
+        --parchment: #f7f3e9;
+        --sepia: rgba(139, 69, 19, 0.1);
+      }
 
-    <div class="camera-container">
-        <video id="cameraFeed" width="640" height="480" autoplay></video>
-        <button id="captureBtn">Ambil Foto</button>
-        <div id="countdown"></div>
+      body {
+        background: linear-gradient(
+          135deg,
+          #f4f1e8 0%,
+          #e8dcc0 50%,
+          #d4c5a0 100%
+        );
+        font-family: "Crimson Text", serif;
+        color: var(--vintage-dark);
+        position: relative;
+        min-height: 100vh;
+      }
+
+      /* Vintage paper texture overlay */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: radial-gradient(
+            circle at 25% 25%,
+            rgba(139, 69, 19, 0.02) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 75% 75%,
+            rgba(139, 69, 19, 0.02) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 50% 50%,
+            rgba(212, 175, 55, 0.01) 0%,
+            transparent 50%
+          );
+        background-size: 200px 200px, 150px 150px, 100px 100px;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .container {
+        position: relative;
+        z-index: 2;
+      }
+
+      .hero-section {
+        background: linear-gradient(135deg, 
+          rgba(212, 175, 55, 0.9), 
+          rgba(160, 82, 45, 0.8), 
+          rgba(139, 69, 19, 0.7));
+        color: var(--vintage-cream);
+        padding: 4rem 2rem;
+        border-radius: 20px;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: var(--vintage-shadow),
+          inset 0 0 0 1px rgba(212, 175, 55, 0.5),
+          inset 0 2px 0 rgba(255, 255, 255, 0.2);
+        border: 3px solid var(--vintage-gold);
+      }
+
+      /* Ornate border decoration */
+      .hero-section::before {
+        content: "";
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        right: 15px;
+        bottom: 15px;
+        border: 2px solid rgba(212, 175, 55, 0.3);
+        border-radius: 15px;
+        pointer-events: none;
+      }
+
+      .hero-section::after {
+        content: "✦ ✦ ✦";
+        position: absolute;
+        top: 25px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--vintage-gold);
+        font-size: 1.8rem;
+        letter-spacing: 2rem;
+        opacity: 0.7;
+      }
+
+      .hero-section h1 {
+        font-family: "Playfair Display", serif;
+        font-weight: 900;
+        font-size: 4.2rem;
+        position: relative;
+        z-index: 2;
+        margin-top: 1.5rem;
+        letter-spacing: -2px;
+        background: linear-gradient(45deg, #fff, #f4f1e8, #d4af37);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .hero-section h1::before {
+        content: attr(data-text);
+        position: absolute;
+        top: 0.15em;
+        left: 0.15em;
+        z-index: 1;
+        color: transparent;
+        text-shadow: 3px 3px 0px rgba(44, 24, 16, 0.4), 0 0 15px rgba(212, 175, 55, 0.6);
+        pointer-events: none;
+        background: none;
+        -webkit-background-clip: initial;
+        -webkit-text-fill-color: initial;
+        background-clip: initial;
+      }
+
+      .hero-section p {
+        font-size: 1.5rem;
+        font-style: italic;
+        position: relative;
+        z-index: 2;
+        margin-top: 1rem;
+        text-shadow: 2px 2px 4px rgba(44, 24, 16, 0.3);
+        opacity: 0.95;
+      }
+
+      .action-section {
+        background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+        border: 3px solid var(--vintage-gold);
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        box-shadow: var(--vintage-shadow);
+      }
+
+      .action-section::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        bottom: 10px;
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        border-radius: 15px;
+        pointer-events: none;
+      }
+
+      .action-card {
+        background: rgba(255, 255, 255, 0.6);
+        border: 2px solid var(--vintage-gold);
+        border-radius: 15px;
+        padding: 2.5rem 2rem;
+        height: 100%;
+        transition: all 0.4s ease;
+        position: relative;
+        backdrop-filter: blur(5px);
+      }
+
+      .action-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(44, 24, 16, 0.3);
+        border-color: var(--vintage-brown);
+      }
+
+      .action-icon {
+        font-size: 4rem;
+        color: var(--vintage-brown);
+        margin-bottom: 1.5rem;
+        text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+        position: relative;
+      }
+
+      .action-icon::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.15), transparent);
+        border-radius: 50%;
+        z-index: -1;
+      }
+
+      .feature-grid {
+        margin-top: 4rem;
+      }
+
+      .feature-card {
+        background: linear-gradient(135deg, var(--parchment), var(--vintage-cream));
+        border: 2px solid var(--vintage-gold);
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(44, 24, 16, 0.15);
+        height: 100%;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 10px;
+        pointer-events: none;
+      }
+
+      .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(44, 24, 16, 0.25);
+        border-color: var(--vintage-brown);
+      }
+
+      .feature-card .card-body {
+        position: relative;
+        z-index: 2;
+        padding: 2.5rem 2rem;
+      }
+
+      .feature-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--vintage-brown);
+        text-shadow: 2px 2px 4px rgba(212, 175, 55, 0.3);
+      }
+
+      .feature-card h3 {
+        font-family: "Playfair Display", serif;
+        font-weight: 700;
+        color: var(--vintage-dark);
+        margin-bottom: 1rem;
+        font-size: 1.6rem;
+        text-shadow: 1px 1px 2px rgba(212, 175, 55, 0.2);
+      }
+
+      .feature-card p {
+        color: rgba(44, 24, 16, 0.8);
+        line-height: 1.8;
+        font-size: 1.1rem;
+      }
+
+      /* File upload styling */
+      .file-upload-container {
+        position: relative;
+        margin-bottom: 1rem;
+      }
+
+      .file-upload-label {
+        display: block;
+        width: 100%;
+        cursor: pointer;
+      }
+
+      .upload-preview {
+        background: rgba(212, 175, 55, 0.1);
+        border: 2px dashed var(--vintage-gold);
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        text-align: center;
+        color: var(--vintage-brown);
+        font-style: italic;
+      }
+
+      /* Decorative separator */
+      .decorative-separator {
+        text-align: center;
+        margin: 3rem 0;
+      }
+
+      .decorative-separator::before {
+        content: "◆ ◇ ◆";
+        display: inline-block;
+        font-size: 2rem;
+        color: var(--vintage-gold);
+        margin-bottom: 1rem;
+        letter-spacing: 1rem;
+      }
+
+      /* Alert styling */
+      .alert {
+        border-radius: 8px;
+        border: 2px solid;
+        font-family: "Crimson Text", serif;
+        font-weight: 600;
+      }
+
+      .alert-success {
+        background: linear-gradient(
+          135deg,
+          var(--parchment),
+          var(--vintage-cream)
+        );
+        border-color: var(--vintage-gold);
+        color: var(--vintage-brown);
+      }
+
+      .alert-danger {
+        background: linear-gradient(135deg, #f4f1e8, #edd5d5);
+        border-color: var(--vintage-red);
+        color: var(--vintage-red);
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .hero-section h1 {
+          font-size: 3rem;
+        }
+        
+        .action-card {
+          margin-bottom: 2rem;
+        }
+        
+        .feature-icon, .action-icon {
+          font-size: 3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container py-5">
+      <!-- Hero Section -->
+      <div class="hero-section text-center vintage-aging">
+        <h1 class="display-3">Image Enhancement</h1>
+        <p class="lead">Transform your memories into timeless masterpieces</p>
+      </div>
+
+      <!-- Action Section -->
+      <div class="action-section vintage-aging">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="action-card text-center">
+              <div class="action-icon">
+                <i class="fas fa-camera-retro"></i>
+              </div>
+              <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--vintage-dark);">Capture Moment</h3>
+              <p class="mb-4" style="color: rgba(44, 24, 16, 0.8);">Use gesture detection to capture the perfect shot with a simple hi-five</p>
+              <a href="{{ url_for('capture_page') }}" class="btn btn-vintage btn-vintage-primary">
+                <i class="fas fa-hand-paper me-2"></i>Start Capturing
+              </a>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="action-card text-center">
+              <div class="action-icon">
+                <i class="fas fa-palette"></i>
+              </div>
+              <h3 class="mb-3" style="font-family: 'Playfair Display', serif; font-weight: 700; color: var(--vintage-dark);">Enhance Image</h3>
+              <p class="mb-3" style="color: rgba(44, 24, 16, 0.8);">Upload and enhance your photos with professional-grade tools</p>
+              
+              <form action="{{ url_for('upload_file') }}" method="POST" enctype="multipart/form-data" class="mb-0">
+                <div class="file-upload-container">
+                  <input type="file" name="file" id="fileInput" class="d-none" accept="image/*" required />
+                  <label for="fileInput" class="btn btn-vintage btn-vintage-secondary file-upload-label">
+                    <i class="fas fa-upload me-2"></i>Choose Image
+                  </label>
+                  <div class="upload-preview d-none" id="uploadPreview">
+                    <small>Click "Process Image" to continue</small>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-vintage btn-vintage-primary">
+                  <i class="fas fa-magic me-2"></i>Process Image
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative Separator -->
+      <div class="decorative-separator"></div>
+
+      <!-- Features Section -->
+      <div class="feature-grid">
+        <div class="row g-4">
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-adjust"></i>
+                </div>
+                <h3>Professional Enhancement</h3>
+                <p>Fine-tune brightness, contrast, saturation, and sharpness with precision controls for stunning results.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-hand-sparkles"></i>
+                </div>
+                <h3>Smart Gesture Control</h3>
+                <p>Capture photos hands-free with advanced AI gesture recognition and automatic countdown timer.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="feature-card vintage-aging">
+              <div class="card-body text-center">
+                <div class="feature-icon">
+                  <i class="fas fa-eye-dropper"></i>
+                </div>
+                <h3>Color Mastery</h3>
+                <p>Advanced color mixing tools to adjust individual color ranges with hue, saturation, and luminance controls.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <h2>Unggah Foto</h2>
-    <form method="POST" action="{{ url_for('upload_file') }}" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Unggah">
-    </form>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
 
-    <canvas id="canvas" style="display:none;"></canvas>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // File preview functionality
+      document.getElementById('fileInput').addEventListener('change', function(e) {
+        const preview = document.getElementById('uploadPreview');
+        if (e.target.files.length > 0) {
+          preview.textContent = `Selected: ${e.target.files[0].name}`;
+          preview.classList.remove('d-none');
+        } else {
+          preview.classList.add('d-none');
+        }
+      });
+    </script>
+  </body>
 </html>

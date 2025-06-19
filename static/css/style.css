@@ -1,13 +1,11 @@
-body {
+/* flask/static/css/style.css */
+/* File ini sekarang bisa dikosongkan atau digunakan untuk gaya spesifik yang tidak vintage */
+/* Contoh jika ingin tetap ada, tapi ini tidak akan banyak berpengaruh karena sudah ditimpa/diatur di global_vintage.css */
+
+/* body {
     font-family: sans-serif;
     text-align: center;
-}
+} */
+/* dll... */
 
-.camera-container {
-    margin-bottom: 20px;
-}
-
-#countdown {
-    font-size: 2em;
-    margin-top: 10px;
-}
+/* Anda bisa menghapus semua konten di sini atau biarkan kosong */
