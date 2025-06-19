@@ -129,16 +129,6 @@ PCDD/
 - Fine-tune hue, saturasi, dan lightness untuk setiap warna
 
 ## 🔧 Konfigurasi
-
-### Environment Variables
-Buat file `.env` untuk konfigurasi:
-```env
-SECRET_KEY=kunci_rahasia_anda_disini
-UPLOAD_FOLDER=static/uploads
-PROCESSED_FOLDER=static/processed
-DEBUG=True
-```
-
 ### Pengaturan Kamera
 Modifikasi parameter kamera di `app.py`:
 ```python
@@ -198,18 +188,6 @@ Proyek ini dikembangkan sebagai solusi untuk mengatasi masalah **flat profile** 
 - **NumPy**: Komputasi numerik untuk manipulasi array
 - **PIL/Pillow**: Manipulasi gambar tingkat tinggi
 
-## 🤝 Kontribusi
-
-1. Fork repository ini
-2. Buat branch fitur (`git checkout -b feature/fitur-amazing`)
-3. Commit perubahan (`git commit -m 'Tambah fitur amazing'`)
-4. Push ke branch (`git push origin feature/fitur-amazing`)
-5. Buka Pull Request
-
-## 📝 Lisensi
-
-Proyek ini dilisensikan di bawah MIT License - lihat file LICENSE untuk detail.
-
 ## 🙏 Acknowledgments
 
 - **OpenCV** untuk kemampuan computer vision
@@ -218,41 +196,3 @@ Proyek ini dilisensikan di bawah MIT License - lihat file LICENSE untuk detail.
 - **Bootstrap 5** untuk komponen UI responsif
 - **Google Fonts** untuk tipografi
 
-## 📞 Dukungan
-
-Jika Anda mengalami masalah atau memiliki pertanyaan:
-1. Periksa halaman [Issues](https://github.com/Hikamhuda/PCDD/issues)
-2. Buat issue baru dengan deskripsi detail
-3. Sertakan screenshot dan log error jika ada
-
-## 🔮 Pengembangan Masa Depan
-
-- [ ] Perbaikan otomatis berbasis AI
-- [ ] Kemampuan batch processing
-- [ ] Integrasi media sosial
-- [ ] Filter dan efek lanjutan
-- [ ] Akun pengguna dan galeri gambar
-- [ ] Pengembangan aplikasi mobile
-
-## 📊 Hasil dan Performa
-
-### Metrik Perbaikan Citra:
-- **Peningkatan Kontras**: Hingga 40% improvement
-- **Pengurangan Noise**: Efektif hingga 85%
-- **Waktu Pemrosesan**: < 2 detik per gambar
-- **Akurasi Deteksi Gesture**: 95%+
-
-### Contoh Hasil:
-Sebelum dan sesudah perbaikan untuk citra dengan flat profile:
-- Histogram lebih terdistribusi
-- Detail yang lebih tajam
-- Warna yang lebih hidup
-- Kontras yang optimal
-
----
-
-⭐ **Beri star pada repository ini jika bermanfaat!**
-
-📧 **Kontak**: [hikamhuda@gmail.com](mailto:hikamhuda@gmail.com)
-
-🌐 **Live Demo**: [Link Demo Jika Ada]
